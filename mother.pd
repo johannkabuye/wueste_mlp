@@ -550,7 +550,7 @@
 #X obj 9 128 bng 15 250 50 0 open-quick-guide! empty <--QUICK-GUIDE 17 7 0 10 #fcfcfc #000000 #000000;
 #X obj 9 148 bng 15 250 50 0 open-manual! empty <--MANUAL 17 7 0 10 #fcfcfc #000000 #000000;
 #X obj 5 37 cnv 5 5 5 empty empty (AUTOMATONISM\ MOD.) 0 12 0 12 #fcfcfc #404040 0;
-#N canvas 0 64 1440 567 TO-DO 0;
+#N canvas 0 64 1440 567 TO-DO 1;
 #X obj 727 10 cnv 16 350 25 empty empty IN-PROGRESS 20 12 0 25 #ff8300 #404040 0;
 #X obj 1086 9 cnv 16 350 25 empty empty DONE 20 12 0 25 #bbbbbb #404040 0;
 #X obj 10 9 cnv 16 350 25 empty empty NICE-TO-HAVE 20 12 0 25 #ffc7c6 #404040 0;
@@ -603,12 +603,15 @@
 #X text 371 152 DRUM-MODUL-PARAMETER REDUZIEREN ---------------------;
 #X text 371 212 Latenzproblem klären ---------------------;
 #X text 371 232 - Wo kommt die Latenz her und wie lässt sie sich klären?;
-#X text 727 41 amidiminder -------------------------;
+#X text 727 121 amidiminder -------------------------;
 #X text 1087 101 amidiminder -------------------------;
 #X text 1087 121 - rules datei so umschreiben \, dass der crave als midi out anerkannt wird.;
-#X text 727 61 - datei sichern - und als txt in modformer ablegen;
+#X text 727 141 - datei sichern - und als txt in modformer ablegen;
 #X text 1090 51 MIDI-CLOCK-LATENCY -------------------------;
 #X text 1090 71 - die Midi-Clock mit einer Latenz ausstatten;
+#X text 727 71 Conductor-Module -------------------------;
+#X text 727 91 - Module entwickeln mit dem alle Sound-module gleichzeitig angesteuert werden können (z.B. Decay \, etc.);
+#X text 727 44 Clock-Module in Menu integrieren -------------------------;
 #X restore 8 208 pd TO-DO;
 #N canvas 209 175 1099 553 patchloader 0;
 #X obj 118 358 pdcontrol;

@@ -368,7 +368,7 @@
 #X obj 643 427 loadbang;
 #X text 858 427 Post-Distortion Gain Staging;
 #X obj 419 558 biquad~ -1.55341 -0.622111 0.793881 1.58776 0.793881;
-#X msg 830 451 0.5;
+#X msg 830 451 0.6;
 #X connect 0 0 1 1;
 #X connect 1 0 78 0;
 #X connect 2 0 8 0;
@@ -478,9 +478,9 @@
 #X connect 94 0 86 2;
 #X restore 409 -144 pd bassdrum;
 #X obj 116 228 hsl 128 15 0 127 0 1 \$0-square-s \$0-square-r SQUARE 133 7 0 10 #fcfcfc #000000 #000000 12700 1;
-#X obj 116 168 hsl 128 15 0 127 0 1 \$0-freq2-s \$0-freq2-r FREQ2 133 7 0 10 #fcfcfc #000000 #000000 7100 1;
+#X obj 116 168 hsl 128 15 0 127 0 1 \$0-freq2-s \$0-freq2-r FREQ2 133 7 0 10 #fcfcfc #000000 #000000 6900 1;
 #X obj 116 258 hsl 128 15 0 127 0 1 \$0-noise-s \$0-noise-r NOISE 133 7 0 10 #fcfcfc #000000 #000000 11300 1;
-#X obj 116 138 hsl 128 15 0 127 0 1 \$0-freq1-s \$0-freq1-r FREQ1 133 7 0 10 #fcfcfc #000000 #000000 1600 1;
+#X obj 116 138 hsl 128 15 0 127 0 1 \$0-freq1-s \$0-freq1-r FREQ1 133 7 0 10 #fcfcfc #000000 #000000 2100 1;
 #X obj 116 288 hsl 128 15 0 127 0 1 \$0-lowpass-s \$0-lowpass-r LOWPASS 133 7 0 10 #fcfcfc #000000 #000000 8900 1;
 #X obj 444 344 hsl 128 15 0 127 0 1 \$0-flam-prob-s \$0-flam-prob-r GAIN 133 7 0 10 #fcfcfc #000000 #000000 12700 1;
 #X obj 116 317 hsl 128 15 0 127 0 1 \$0-decay-s \$0-decay-r DECAY 133 7 0 10 #fcfcfc #000000 #000000 8700 1;

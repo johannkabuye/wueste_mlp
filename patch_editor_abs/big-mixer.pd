@@ -701,8 +701,8 @@
 #X connect 39 0 8 0;
 #X connect 39 0 20 0;
 #X restore 1173 339 pd master-out;
-#X obj 434 220 hsl 40 15 0 127 0 1 \$0-maestro4-pan5-s \$0-maestro4-pan5-r HP5 -25 8 0 10 #fcfcfc #000000 #000000 802 1;
-#X obj 431 125 vsl 17 79 0 127 0 1 \$0-maestro4-ch5-s \$0-maestro4-ch5-r CH5 -1 -9 0 10 #fcfcfc #000000 #000000 3900 1;
+#X obj 434 220 hsl 40 15 0 127 0 1 \$0-maestro4-pan5-s \$0-maestro4-pan5-r HP5 -25 8 0 10 #fcfcfc #000000 #000000 0 1;
+#X obj 431 125 vsl 17 79 0 127 0 1 \$0-maestro4-ch5-s \$0-maestro4-ch5-r CH5 -1 -9 0 10 #fcfcfc #000000 #000000 7400 1;
 #X obj 450 125 vu 25 80 \$0-maestro4-ch5-meter-r empty -1 -8 0 10 #404040 #000000 0 0;
 #X obj 510 220 hsl 40 15 0 127 0 1 \$0-maestro4-pan6-s \$0-maestro4-pan6-r HP6 -25 8 0 10 #fcfcfc #000000 #000000 1000 1;
 #X obj 507 125 vsl 17 79 0 127 0 1 \$0-maestro4-ch6-s \$0-maestro4-ch6-r CH6 -1 -9 0 10 #fcfcfc #000000 #000000 3400 1;
@@ -713,7 +713,7 @@
 #X obj 659 220 hsl 40 15 0 127 0 1 \$0-maestro4-pan8-s \$0-maestro4-pan8-r HP8 -25 8 0 10 #fcfcfc #000000 #000000 1600 1;
 #X obj 656 125 vsl 17 79 0 127 0 1 \$0-maestro4-ch8-s \$0-maestro4-ch8-r CH8 -1 -9 0 10 #fcfcfc #000000 #000000 0 1;
 #X obj 675 125 vu 25 80 \$0-maestro4-ch8-meter-r empty -1 -8 0 10 #404040 #000000 0 0;
-#N canvas 643 68 383 629 channel5 0;
+#N canvas 643 68 383 629 channel5 1;
 #X obj 110 563 throw~ \$0-left;
 #X obj 155 541 throw~ \$0-right;
 #X obj 217 112 * 0.00787402;
@@ -783,6 +783,7 @@
 #X connect 8 0 3 0;
 #X connect 10 0 21 0;
 #X connect 11 0 5 0;
+#X connect 11 0 21 1;
 #X connect 13 0 14 1;
 #X connect 14 0 0 0;
 #X connect 14 0 1 0;
