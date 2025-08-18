@@ -7097,7 +7097,7 @@
 #X obj 177 59 r \$0-reset!;
 #X msg 177 81 0;
 #X msg 83 341 \; pd-main.pd obj 200 200 \$1 \$2;
-#X obj 162 280 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10 #fcfcfc #000000 #000000 21 256;
+#X obj 162 280 nbx 5 14 -1e+37 1e+37 0 1 empty empty empty 0 -8 0 10 #fcfcfc #000000 #000000 23 256;
 #X obj 64 387 t b b;
 #X msg 64 509 loadbang;
 #X obj 91 411 s SAVE-S;
@@ -7567,19 +7567,19 @@
 #X text 345 -72 <-- for now removed from gui - when corrected it will be added again.;
 #X obj 196 119 tgl 15 1 \$0-clock-on-off-s \$0-clock-on-off-r ON/OFF 17 7 0 10 #fcfcfc #000000 #000000 0 1;
 #X obj 746 539 metro 100;
-#X obj 199 137 hsl 128 15 0 127 0 1 \$0-clock-clk-rate-s \$0-clock-clk-rate-r TEMPO 133 7 0 10 #fcfcfc #000000 #000000 0 1;
+#X obj 199 137 hsl 128 15 0 127 0 1 \$0-clock-clk-rate-s \$0-clock-clk-rate-r TEMPO 133 7 0 10 #fcfcfc #000000 #000000 8900 1;
 #X floatatom 297 122 5 0 0 1 BPM - - 10;
 #X obj 528 590 / 127;
 #X obj 528 728 t f f;
 #X obj 353 261 bng 15 50 50 0 empty empty empty 17 7 0 10 #fcfcfc #dc4c90 #000000;
 #X obj 746 561 t b b;
 #X obj 738 310 inlet~;
-#X obj 971 301 inlet~;
+#X obj 367 4 inlet~;
 #X obj 738 382 snapshot~;
 #X obj 738 433 t b f;
 #X obj 528 612 +;
 #X text 737 286 CLK-RATE CV INPUT;
-#X text 974 282 ON/OFF GATE INPUT;
+#X text 370 -15 ON/OFF GATE INPUT;
 #X obj 818 107 cnv 5 5 5 empty empty ON/OFF 0 0 0 8 #fcfcfc #dc4c90 0;
 #X obj 106 90 cnv 5 5 5 empty empty CLK-RATE 0 0 0 8 #fcfcfc #404040 0;
 #N canvas 21 25 1047 747 state-saving-multiple-instances 0;
@@ -7677,7 +7677,7 @@
 #X obj 1319 312 makefilename %d;
 #X msg 1319 336 label \$1;
 #X obj 104 163 cnv 5 5 5 empty empty OUT 0 0 0 8 #fcfcfc #dc4c90 0;
-#X obj 971 325 threshold~ 0.99 0 0.99 0;
+#X obj 367 28 threshold~ 0.99 0 0.99 0;
 #X obj 840 358 env~;
 #X floatatom 840 380 5 0 0 0 - - - 0;
 #X obj 840 424 t b;
@@ -7896,7 +7896,6 @@
 #X connect 36 0 38 0;
 #X connect 38 0 39 0;
 #X connect 39 0 37 0;
-#X connect 41 0 19 0;
 #X connect 42 0 43 0;
 #X connect 43 0 45 0;
 #X connect 44 0 29 0;

@@ -502,10 +502,10 @@
 #X connect 94 0 85 2;
 #X connect 95 0 55 0;
 #X restore 409 -144 pd bassdrum;
-#X obj 116 228 hsl 128 15 0 127 0 1 \$0-square-s \$0-square-r SQUARE 133 7 0 10 #fcfcfc #000000 #000000 8300 1;
-#X obj 116 168 hsl 128 15 0 127 0 1 \$0-freq2-s \$0-freq2-r FREQ2 133 7 0 10 #fcfcfc #000000 #000000 8000 1;
+#X obj 116 228 hsl 128 15 0 127 0 1 \$0-square-s \$0-square-r SQUARE 133 7 0 10 #fcfcfc #000000 #000000 6200 1;
+#X obj 116 168 hsl 128 15 0 127 0 1 \$0-freq2-s \$0-freq2-r FREQ2 133 7 0 10 #fcfcfc #000000 #000000 8100 1;
 #X obj 116 258 hsl 128 15 0 127 0 1 \$0-noise-s \$0-noise-r NOISE 133 7 0 10 #fcfcfc #000000 #000000 12700 1;
-#X obj 116 138 hsl 128 15 0 127 0 1 \$0-freq1-s \$0-freq1-r FREQ1 133 7 0 10 #fcfcfc #000000 #000000 3100 1;
+#X obj 116 138 hsl 128 15 0 127 0 1 \$0-freq1-s \$0-freq1-r FREQ1 133 7 0 10 #fcfcfc #000000 #000000 2700 1;
 #X obj 116 288 hsl 128 15 0 127 0 1 \$0-lowpass-s \$0-lowpass-r LOWPASS 133 7 0 10 #fcfcfc #000000 #000000 12700 1;
 #X obj 444 344 hsl 128 15 0 127 0 1 \$0-flam-prob-s \$0-flam-prob-r GAIN 133 7 0 10 #fcfcfc #000000 #000000 12700 1;
 #X obj 116 317 hsl 128 15 0 127 0 1 \$0-decay-s \$0-decay-r DECAY 133 7 0 10 #fcfcfc #000000 #000000 10700 1;
@@ -1490,7 +1490,7 @@
 #X obj 623 -84 * 1;
 #X obj 646 -51 t b f;
 #X text 624 -302 FREQ1-;
-#X obj 116 153 hsl 128 15 0 127 0 1 \$0-freq1-cv-s \$0-freq1-cv-r FREQ1-/+ 133 7 0 10 #90d3b0 #000000 #000000 3000 1;
+#X obj 116 153 hsl 128 15 0 127 0 1 \$0-freq1-cv-s \$0-freq1-cv-r FREQ1-/+ 133 7 0 10 #90d3b0 #000000 #000000 12700 1;
 #X obj 622 -27 r \$0-freq1-s;
 #X obj 688 -209 r \$0-freq1-cv-s;
 #X floatatom 623 142 5 0 0 0 - - - 0;
@@ -1519,7 +1519,7 @@
 #X obj 802 -27 r \$0-freq2-s;
 #X obj 868 -209 r \$0-freq2-cv-s;
 #X obj 116 213 hsl 128 15 0 127 0 1 \$0-curve-cv-s \$0-curve-cv-r CURVE-/+ 133 7 0 10 #90d3b0 #000000 #000000 0 1;
-#X obj 116 243 hsl 128 15 0 127 0 1 \$0-square-cv-s \$0-square-cv-r SQUARE-/+ 133 7 0 10 #90d3b0 #000000 #000000 6000 1;
+#X obj 116 243 hsl 128 15 0 127 0 1 \$0-square-cv-s \$0-square-cv-r SQUARE-/+ 133 7 0 10 #90d3b0 #000000 #000000 9700 1;
 #X obj 992 -4 / 127;
 #X obj 992 43 pack 0 50;
 #X obj 1058 -187 / 127;

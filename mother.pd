@@ -1,4 +1,4 @@
-#N canvas 218 112 717 403 10;
+#N canvas 75 185 717 403 10;
 #X declare -path patch_editor_abs/controller;
 #X declare -path patch_editor_abs;
 #X declare -path patch_editor_abs/test;
