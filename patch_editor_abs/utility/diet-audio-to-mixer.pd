@@ -1,9 +1,9 @@
-#N canvas 0 25 1165 694 10;
+#N canvas 0 25 737 694 10;
 #X obj 311 64 inlet~;
-#X obj 122 153 hsl 128 15 0 127 0 1 \$0-diet-audio-to-mix-channel-s \$0-diet-audio-to-mix-channel-r CHANNEL -3 -7 0 10 #fcfcfc #000000 #000000 2900 1;
+#X obj 122 153 hsl 128 15 0 127 0 1 \$0-diet-audio-to-mix-channel-s \$0-diet-audio-to-mix-channel-r CHANNEL -3 -7 0 10 #fcfcfc #000000 #000000 0 1;
 #X obj 105 109 cnv 5 5 5 empty empty IN 0 0 0 8 #fcfcfc #404040 0;
 #X obj 119 125 cnv 5 5 5 empty empty DIET-AUDIO-TO-MIX 0 0 0 12 #fcfcfc #404040 0;
-#N canvas 155 79 958 735 state-saving-multiple-instances 1;
+#N canvas -12 25 749 735 state-saving-multiple-instances 0;
 #X obj 223 18 loadbang;
 #X obj 422 480 textfile;
 #X msg 613 463 rewind;
@@ -27,10 +27,10 @@
 #X obj 135 308 r \$0-diet-audio-to-mix-channel-s;
 #X floatatom 169 365 5 0 0 0 - - - 0;
 #X obj 478 343 r patch-path;
-#X msg 422 402 read /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch5/statesave/35-diet-audio-to-mix-ss.txt;
+#X msg 422 402 read /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/34-diet-audio-to-mix-ss.txt;
 #X obj 272 92 s update-path;
 #X obj 223 51 t b b b;
-#X msg 135 600 write /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch5/statesave/35-diet-audio-to-mix-ss.txt;
+#X msg 135 600 write /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/34-diet-audio-to-mix-ss.txt;
 #X obj 433 362 pack f s;
 #X obj 190 539 r patch-path;
 #X floatatom 103 247 5 0 0 0 - - - 0;
@@ -42,6 +42,8 @@
 #X obj 422 342 t b f;
 #X obj 159 40 bng 16 250 50 0 empty empty empty 0 -8 0 10 #fcfcfc #000000 #000000;
 #X floatatom 353 530 5 0 0 0 - - - 0;
+#X obj 475 192 text define -k \$0-presets;
+#A set lalala;
 #X connect 0 0 25 0;
 #X connect 1 0 18 0;
 #X connect 2 0 1 0;
@@ -87,7 +89,7 @@
 #X restore 399 86 pd state-saving-multiple-instances;
 #X obj 399 163 s \$0-instance-num;
 #X obj 399 115 makefilename %d;
-#X obj 241 125 cnv 5 5 5 empty \$0-instance-num 35 0 0 0 12 #fcfcfc #404040 0;
+#X obj 241 125 cnv 5 5 5 empty \$0-instance-num 34 0 0 0 12 #fcfcfc #404040 0;
 #X msg 399 140 label \$1;
 #N canvas 81 22 1117 745 state-saving-via-preset-manager-module 0;
 #X obj 477 349 textfile;

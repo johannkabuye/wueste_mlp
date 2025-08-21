@@ -2,7 +2,7 @@
 #X obj 105 115 bng 15 50 50 0 empty empty empty 17 7 0 10 #fcfcfc #dc4c90 #000000;
 #X obj 135 124 cnv 5 5 5 empty empty DIET-SIMPLER 0 0 0 12 #fcfcfc #404040 0;
 #X obj 197 109 cnv 5 5 5 empty empty DECAY 0 0 0 8 #ffffff #2f004d 0;
-#X obj 223 124 cnv 5 5 5 empty \$0-instance-num 3 0 0 0 12 #fcfcfc #404040 0;
+#X obj 223 124 cnv 5 5 5 empty \$0-instance-num 1 0 0 0 12 #fcfcfc #404040 0;
 #X obj 1345 -65 inlet~ FILE-CV;
 #X obj 1345 -43 s~ \$0-sampler-file-cv;
 #X obj 297 109 cnv 5 5 5 empty empty FILE 0 0 0 8 #fcfcfc #404040 0;
@@ -36,14 +36,14 @@
 #X obj 169 369 r \$0-decay-s;
 #X obj 184 388 r \$0-sample-rate-s;
 #X obj 496 357 r patch-path;
-#X msg 440 416 read /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/3-simpler-ss.txt;
+#X msg 440 416 read /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/1-simpler-ss.txt;
 #X obj 451 376 pack f s;
 #X obj 440 335 f;
 #X obj 440 356 t b f;
 #X msg 450 395 set read \$2/statesave/\$1-simpler-ss.txt;
 #X obj 122 20 bng 16 250 50 0 empty empty empty 0 -8 0 10 #fcfcfc #000000 #000000;
 #X obj 107 583 r patch-path;
-#X msg 51 642 write /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/3-simpler-ss.txt;
+#X msg 51 642 write /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/1-simpler-ss.txt;
 #X obj 62 602 pack f s;
 #X obj 51 561 f;
 #X obj 51 582 t b f;
@@ -274,7 +274,7 @@
 #X msg 200 629 0 15 \, 1 50 1;
 #X obj 173 954 *~;
 #X obj 127 250 hsl 128 15 0 127 0 1 \$0-attack-s \$0-attack-r ATTACK 133 7 0 10 #fcfcfc #000000 #000000 0 1;
-#X obj 127 265 hsl 128 15 0 127 0 1 \$0-decay-s \$0-decay-r DECAY 133 7 0 10 #fcfcfc #000000 #000000 9000 1;
+#X obj 127 265 hsl 128 15 0 127 0 1 \$0-decay-s \$0-decay-r DECAY 133 7 0 10 #fcfcfc #000000 #000000 3900 1;
 #N canvas 328 128 611 487 envelope 0;
 #X obj 95 268 / 127;
 #X obj 95 294 t a a;
@@ -498,7 +498,7 @@
 #X connect 20 0 16 0;
 #X restore 183 991 pd alias;
 #X obj 447 685 hsl 128 15 0 127 0 1 empty empty ATTACK 133 7 0 10 #fcfcfc #000000 #000000 6400 1;
-#X obj 127 309 hsl 128 15 0 127 0 1 \$0-sample-rate-s \$0-sample-rate-r SMPL-RTE 133 7 0 10 #fcfcfc #000000 #000000 12700 1;
+#X obj 127 309 hsl 128 15 0 127 0 1 \$0-sample-rate-s \$0-sample-rate-r SMPL-RTE 133 7 0 10 #fcfcfc #000000 #000000 7400 1;
 #X obj 410 629 / 127;
 #X obj 410 687 * 6;
 #X obj 444 705 / 127;

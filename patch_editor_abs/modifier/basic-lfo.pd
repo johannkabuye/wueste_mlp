@@ -154,7 +154,7 @@
 #X connect 13 0 7 0;
 #X connect 14 0 13 0;
 #X restore 350 519 pd pulse;
-#N canvas 315 35 593 735 state-saving-multiple-instances 0;
+#N canvas 315 35 982 739 state-saving-multiple-instances 0;
 #X obj 137 29 loadbang;
 #X obj 184 452 textfile;
 #X msg 466 435 rewind;
