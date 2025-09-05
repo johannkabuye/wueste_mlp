@@ -26,8 +26,8 @@
 #X obj 65 163 *;
 #X obj 65 182 *;
 #X obj 65 201 pack f 30;
-#X obj 51 487 biquad~ -1.55341 -0.622111 0.793881 1.58776 0.793881;
-#X text 378 488 FREQ: 20k Q: 0.618;
+#X obj 61 487 biquad~ -1.55341 -0.622111 0.793881 1.58776 0.793881;
+#X text 388 488 FREQ: 20k Q: 0.618;
 #X connect 0 0 3 0;
 #X connect 2 0 6 0;
 #X connect 3 0 2 0;
