@@ -96,7 +96,7 @@
 #X obj 231 132 mono-rhythm 2;
 #X obj 2 817 basic-lfo 1;
 #X obj 4 559 mute-group 1;
-#X obj 3 619 repeater-group 1;
+#X obj 35 622 repeater-group 1;
 #X obj 5 132 mono-rhythm 3;
 #X obj 679 131 mono-rhythm 4;
 #X connect 0 0 4 0;
@@ -132,5 +132,10 @@
 #X connect 35 0 31 0;
 #X connect 36 0 39 2;
 #X connect 37 0 39 1;
-#X connect 39 0 9 0;
+#X connect 39 0 40 0;
+#X connect 39 1 40 1;
+#X connect 39 2 22 0;
+#X connect 39 2 0 0;
+#X connect 40 0 9 0;
+#X connect 40 1 12 0;
 #X connect 41 0 39 0;
