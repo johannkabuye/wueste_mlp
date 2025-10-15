@@ -1,0 +1,8 @@
+#N canvas 733 148 450 300 12;
+#X obj 98 268 netsend -u -b;
+#X msg 223 135 connect localhost 9001;
+#X floatatom 97 124 5 0 0 0 - - - 0;
+#X obj 99 234 oscformat display value 1;
+#X connect 1 0 0 0;
+#X connect 2 0 3 0;
+#X connect 3 0 0 0;

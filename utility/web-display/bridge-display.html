@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="de">
+<meta charset="utf-8" />
+<title>Minimal WS Receiver</title>
+
+<body>
+  <h1>WS Receiver</h1>
+
+  <!-- Acht einfache Ausgaben -->
+  <div>CTRL 1: <span id="v1">0</span></div>
+  <div>CTRL 2: <span id="v2">0</span></div>
+  <div>CTRL 3: <span id="v3">0</span></div>
+  <div>CTRL 4: <span id="v4">0</span></div>
+  <div>CTRL 5: <span id="v5">0</span></div>
+  <div>CTRL 6: <span id="v6">0</span></div>
+  <div>CTRL 7: <span id="v7">0</span></div>
+  <div>CTRL 8: <span id="v8">0</span></div>
+
+  <script>
+    // verbindet sich mit dem Python-WS-Server auf Port 8765
+    const WS_URL = `ws://${location.hostname}:8765`;
+    let ws;
+
+    function setValue(idx, val) {
+      const el = document.getElementById('v' + idx);
+      if (el) el.textContent = String(val|0);
+    }
+
+    function wsConnect() {
+      ws = new WebSocket(WS_URL);
+      ws.onopen = () => console.log('[WS] connected');
+      ws.onclose = () => { console.log('[WS] closed – retrying'); setTimeout(wsConnect, 1000); };
+      ws.onerror = () => ws.close();
+      ws.onmessage = (ev) => {
+        try {
+          const { addr, args } = JSON.parse(ev.data);
+          // erwartet /display/value/<1..8> <0..127>
+          const m = addr.match(/^\/display\/value\/(\d+)$/);
+          if (m) {
+            const idx = Number(m[1]);       // 1..8
+            const val = Number(args?.[0]);  // 0..127
+            if (idx >= 1 && idx <= 8) setValue(idx, val);
+          }
+        } catch (e) {
+          console.error('parse error', e, ev.data);
+        }
+      };
+    }
+
+    wsConnect();
+  </script>
+</body>
+</html>
