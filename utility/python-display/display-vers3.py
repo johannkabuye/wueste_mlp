@@ -9,16 +9,22 @@ from tkinter import font as tkfont
 # ---------------- Configuration ----------------
 HOST, PORT = "0.0.0.0", 9001
 
-# --- FIXED GRID (13 rows) ---
-# 1:8s, 2:4B, 3:4s, 4:8s, 5:4s, 6:1s, 7:4B, 8:4s, 9:8s, 10:4s, 11:1s, 12:8B, 13:8B
-DEFAULT_ROWS = 13
-COLS_PER_ROW = [8, 4, 4, 4, 4, 1, 4, 4, 4, 4, 1, 8, 8]
-BIG_FONT_ROWS = {1, 6, 11, 12}  # (0-based) rows 2,7,12,13 are BIG
+# --- FIXED GRID (11 rows) ---
+# 1:4s, 2:4B, 3:4s, 4:4s, 5:1s, 6:4B, 7:4s, 8:4s, 9:1s, 10:8B, 11:8B
+DEFAULT_ROWS = 11
+COLS_PER_ROW = [4, 4, 4, 4, 4, 4, 4, 4, 4, 8, 8]
+
+# 0-based indices of rows that use BIG font (must be < DEFAULT_ROWS)
+BIG_FONT_ROWS = {1, 5, 10}  # rows 2, 6, 11
 
 # --- FONT SIZE CONTROL ---
-SMALL_FONT_PT = 25
-BIG_FONT_PT   = 28
+SMALL_FONT_PT = 35
+BIG_FONT_PT   = 35
 HEAD_ROW_BONUS_PT = -8
+
+# --- ROW HEIGHTS (pixels) ---
+# Set a pixel height for each of the 11 rows. Adjust to your layout.
+ROW_HEIGHTS = [48, 200, 30, 30, 200, 72, 64, 64, 40, 30, 30]
 
 POLL_INTERVAL_MS = 10
 MAX_APPLIES_PER_TICK = 512
@@ -131,7 +137,7 @@ class DualRing(tk.Frame):
 
         # center value label (inner value)
         cx, cy = self.canvas.winfo_width()//2, self.canvas.winfo_height()//2
-        font_px = 30
+        font_px = 35
         font = ("DejaVu Sans", font_px, "bold")
         display_val = max(1, int(self._inner_val))
         self._label_id = self.canvas.create_text(
@@ -152,7 +158,7 @@ class DualRing(tk.Frame):
     def _update_label(self):
         if self._label_id is None: return
         cx, cy = self.canvas.winfo_width()//2, self.canvas.winfo_height()//2
-        font_px = 30
+        font_px = 35
         font = ("DejaVu Sans", font_px, "bold")
         display_val = max(1, int(self._inner_val))
         self.canvas.itemconfig(self._label_id, text=str(display_val), fill=self._text_color, font=font)
@@ -310,15 +316,20 @@ class Display:
         self.container.pack(expand=True, fill="both")
 
         self.container.columnconfigure(0, weight=1, uniform="outer_col")
-        for r in range(self.rows):
-            self.container.rowconfigure(r, weight=1, uniform="outer_row")
 
         self.vars.clear(); self.labels.clear(); self.cell_frames.clear(); self.row_frames.clear()
 
         for r in range(self.rows):
+            # Fix the grid row to a pixel height
+            fixed_h = ROW_HEIGHTS[r] if r < len(ROW_HEIGHTS) else 0
+            self.container.rowconfigure(r, minsize=fixed_h, weight=0)  # weight=0 => no stretching
+
             row_frame = tk.Frame(self.container, bg="black", bd=0, highlightthickness=0)
             row_frame.grid(row=r, column=0, sticky="nsew", padx=0, pady=0)
             row_frame.grid_propagate(False)
+            if fixed_h:
+                row_frame.configure(height=fixed_h)
+
             self.row_frames.append(row_frame)
 
             cols = self.cols_per_row[r]
@@ -355,6 +366,7 @@ class Display:
             self.labels.append(row_labels)
             self.cell_frames.append(row_cells)
 
+        # basic controls
         self.root.bind("<Escape>", lambda e: self.root.destroy())
         self.root.lift()
         self.root.attributes("-topmost", True)
@@ -372,7 +384,7 @@ class Display:
         holder = self.ring_holders[r][c]
         if holder is None:
             holder = tk.Frame(self.cell_frames[r][c], bg="black", bd=0, highlightthickness=0)
-            holder.place(relx=0.5, rely=0.5, anchor="center", width=size_px, height=size_px)
+            holder.place(relx=0.5, rely=0.0, anchor="n", width=size_px, height=size_px)
             self.ring_holders[r][c] = holder
         else:
             holder.place_configure(width=size_px, height=size_px)
