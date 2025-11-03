@@ -15,12 +15,12 @@ DEFAULT_ROWS = 11
 COLS_PER_ROW = [4, 4, 4, 4, 4, 4, 4, 4, 4, 8, 8]
 
 # 0-based indices of rows that use BIG font (must be < DEFAULT_ROWS)
-BIG_FONT_ROWS = {1, 5, 10}  # rows 2, 6, 11
+BIG_FONT_ROWS = {1, 2, 5, 10}  # rows 2, 6, 11
 
 # --- FONT SIZE CONTROL ---
-SMALL_FONT_PT = 35
+SMALL_FONT_PT = 27
 BIG_FONT_PT   = 35
-HEAD_ROW_BONUS_PT = -8
+HEAD_ROW_BONUS_PT = -0
 
 # --- ROW HEIGHTS (pixels) ---
 # Set a pixel height for each of the 11 rows. Adjust to your layout.
