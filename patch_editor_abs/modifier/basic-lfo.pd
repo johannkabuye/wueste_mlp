@@ -44,7 +44,7 @@
 #X connect 12 0 13 0;
 #X connect 13 0 15 0;
 #X restore 77 601 pd sinewave;
-#X obj 174 121 cnv 5 5 5 empty \$0-instance-num 22 0 0 0 12 #fcfcfc #404040 0;
+#X obj 174 121 cnv 5 5 5 empty \$0-instance-num 1 0 0 0 12 #fcfcfc #404040 0;
 #N canvas 92 117 732 465 triangle 0;
 #X obj 428 75 r \$0-basic-lfo-sync!;
 #X obj 340 53 inlet~;
@@ -404,7 +404,7 @@
 #X connect 22 0 18 0;
 #X connect 23 0 5 0;
 #X restore 479 426 pd scene-out-pm3;
-#X obj 276 281 bng 10 250 50 0 \$0-options-button \$0-options-button-r OPTIONS -45 5 0 10 #fcfcfc #000000 #000000;
+#X obj 308 278 bng 10 250 50 0 \$0-options-button \$0-options-button-r OPTIONS -45 5 0 10 #fcfcfc #000000 #000000;
 #X obj 193 427 t f f;
 #X obj 193 388 * 1.5;
 #X obj 193 407 - 127;
@@ -515,7 +515,7 @@
 #X msg 1160 594 symbol \$1\$2;
 #X obj 1160 518 del 50;
 #X obj 901 772 pack f f f f s, f 30;
-#X msg 795 833 1090-3;
+#X msg 795 833 1331-2;
 #X obj 205 830 throw~ d;
 #X floatatom 795 708 5 0 0 0 - - - 0;
 #X obj 795 687 f;
@@ -2242,7 +2242,7 @@
 #X obj 230 202 bng 15 250 50 0 empty empty empty 17 7 0 10 #fcfcfc #000000 #000000;
 #X obj 230 179 r SAVE-S;
 #X obj 597 283 r patch-path;
-#X msg 558 348 read /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/22-LFO-ss.txt;
+#X msg 558 348 read /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/1-LFO-ss.txt;
 #X obj 272 92 s update-path;
 #X msg 230 350 write /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/22-LFO-ss.txt;
 #X obj 268 268 r patch-path;
@@ -4183,7 +4183,7 @@
 #X listbox 1216 709 20 0 0 0 - - - 0;
 #X obj 629 685 pack s;
 #X obj 678 801 t b s;
-#X obj 336 240 hsl 128 15 0 127 0 1 \$0-param-4-s \$0-param-4-r SHAPE 135 7 0 10 #fcfcfc #000000 #000000 0 1;
+#X obj 336 240 hsl 128 15 0 127 0 1 \$0-param-4-s \$0-param-4-r SHAPE: 135 7 0 10 #fcfcfc #000000 #000000 0 1;
 #X listbox 447 226 4 0 0 0 - \$0-lfo-waveform-gui-r - 8;
 #X connect 0 0 3 0;
 #X connect 1 0 7 0;

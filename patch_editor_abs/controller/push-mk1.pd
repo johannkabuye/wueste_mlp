@@ -47,7 +47,7 @@
 #X floatatom 887 65 5 0 0 0 - - - 0;
 #X floatatom 851 97 5 0 0 0 - - - 0;
 #X msg 728 39 64 -1;
-#N canvas 0 25 1420 847 akai-apc-key 1;
+#N canvas 0 25 1420 847 akai-apc-key 0;
 #X obj 32 39 inlet;
 #X obj 32 63 s apc-key-status;
 #X obj 436 35 ctlin 75;
@@ -931,4 +931,4 @@
 #X connect 48 0 47 0;
 #X connect 49 0 50 0;
 #X connect 50 0 48 0;
-#X coords 0 -1 1 1 200 180 2 100 100;
+#X coords 0 -1 1 1 220 160 2 100 100;
