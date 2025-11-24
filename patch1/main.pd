@@ -23,7 +23,7 @@
 #X declare -path ../patch_editor_abs/shared-objects;
 #X obj 676 1127 cmbcym;
 #X obj 5 1401 diet-audio-to-mixer 34;
-#X obj 1162 193 diet-saturation 26;
+#X obj 1132 254 diet-saturation 26;
 #X obj 452 1401 diet-audio-to-mixer 36;
 #X obj 676 1400 diet-audio-to-mixer 38;
 #X obj 898 1471 diet-audio-to-mixer 39;
@@ -75,9 +75,9 @@
 #X obj 228 1401 diet-audio-to-mixer 42;
 #X obj 2019 852 diet-saturation 28;
 #X obj 1567 1126 diet-looper 2;
-#X obj 1161 72 perk-clap-mod;
+#X obj 1131 133 perk-clap-mod;
 #X obj 452 1128 simple-hats 1;
-#X obj 909 231 scene-conductor;
+#X obj 905 132 scene-conductor;
 #X obj 1822 887 catch~ send1;
 #X obj 1813 737 catch~ send2;
 #X obj 1813 759 stereo-delay 6;
@@ -109,6 +109,10 @@
 #X obj 1345 934 basic-lfo 14;
 #X obj 1568 741 basic-lfo 15;
 #X obj 1569 933 basic-lfo 16;
+#X obj 786 664 s update-display;
+#X obj 785 580 bng 16 250 50 0 empty empty empty 0 -8 0 10 #fcfcfc #000000 #000000;
+#X obj 812 632 s clear-mod-display;
+#X obj 785 603 t b b;
 #X connect 0 0 4 0;
 #X connect 8 1 6 0;
 #X connect 9 0 1 0;
@@ -146,3 +150,6 @@
 #X connect 32 3 28 0;
 #X connect 33 0 31 0;
 #X connect 34 0 31 3;
+#X connect 52 0 54 0;
+#X connect 54 0 51 0;
+#X connect 54 1 53 0;

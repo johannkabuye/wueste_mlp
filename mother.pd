@@ -1,4 +1,4 @@
-#N canvas 65 70 476 558 10;
+#N canvas 238 105 476 558 10;
 #X declare -path patch_editor_abs/controller;
 #X declare -path patch_editor_abs;
 #X declare -path patch_editor_abs/test;
@@ -1232,11 +1232,11 @@
 #X connect 35 0 34 0;
 #X connect 36 0 33 0;
 #X coords 0 -1 1 1 220 60 2 100 100;
-#X restore 236 204 pd audio-to-hw;
+#X restore 236 205 pd audio-to-hw;
 #X text 18 471 1 Opens and closes performance patches \; 2 Loads and keeps the sample library \; 3 Establishes sync over network (not yet) \; 4 Sends audio to hardware \; 5 Manages modes of the Midi Controller (Push MK1);
 #N canvas 63 88 1310 567 MIDI-to-hw 0;
 #X obj 109 126 cnv 5 5 5 empty empty MIDI-CLOCK-DEVICE: 0 0 0 8 #fcfcfc #000000 0;
-#X obj 108 110 cnv 5 5 5 empty empty HARDWARE-MIDIO-SETTINGS: 0 0 0 10 #fcfcfc #404040 0;
+#X obj 108 110 cnv 5 5 5 empty empty HARDWARE-MIDI-SETTINGS: 0 0 0 10 #fcfcfc #404040 0;
 #X floatatom 141 68 5 0 0 0 - - - 0;
 #X msg 141 32 0, f 6;
 #X obj 141 14 loadbang;
@@ -1255,5 +1255,5 @@
 #X connect 8 0 9 0;
 #X connect 9 0 10 0;
 #X coords 0 -1 1 1 220 60 2 100 100;
-#X restore 236 272 pd MIDI-to-hw;
+#X restore 236 269 pd MIDI-to-hw;
 #X text 19 420 MOLIPE is a collection of patches that can be combined like a modular synth.;
