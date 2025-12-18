@@ -16,7 +16,7 @@
 #X msg 575 0 read /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/1-repeat-group-ss.txt;
 #X obj 272 -258 s update-path;
 #X obj 223 -299 t b b b;
-#X msg 230 0 write /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/1-mute-group-ss.txt;
+#X msg 230 0 write /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/1-repeat-group-ss.txt;
 #X obj 586 -40 pack f s;
 #X obj 285 -61 r patch-path;
 #X obj 240 -41 pack f s;
@@ -1322,4 +1322,4 @@
 #X connect 57 0 12 0;
 #X connect 58 0 16 0;
 #X connect 59 0 18 0;
-#X coords 0 -1 1 1 1500 100 2 100 100;
+#X coords 0 -1 1 1 1780 100 2 100 100;

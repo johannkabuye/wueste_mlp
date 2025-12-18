@@ -1,4 +1,4 @@
-#N canvas 380 139 476 558 10;
+#N canvas 884 60 476 558 10;
 #X declare -path patch_editor_abs/controller;
 #X declare -path patch_editor_abs;
 #X declare -path patch_editor_abs/test;
@@ -841,6 +841,7 @@
 #X connect 38 0 36 0;
 #X connect 39 0 31 0;
 #X restore 719 128 pd main-menu;
+#X obj 114 199 bng 15 250 50 0 SAVE-S SAVE-R <--SAVE!(s) 17 7 0 10 #fcfcfc #00fc04 #000000;
 #X connect 0 0 2 0;
 #X connect 1 0 0 0;
 #X connect 2 0 3 0;

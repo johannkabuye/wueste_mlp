@@ -2012,7 +2012,7 @@
 #X obj 124 148 r patch-path;
 #X msg 36 269 write /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/patterns/3mono-rhythm-pattern0.txt 1239-pattern, f 31;
 #X obj 447 61 s update-path;
-#X msg 408 281 read -ascii -resize /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/patterns/3mono-rhythm-pattern0.txt 1297-pattern, f 34;
+#X msg 408 281 read -ascii -resize /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/patterns/3mono-rhythm-pattern0.txt 4427-pattern, f 34;
 #X obj 430 169 pack f f f s;
 #X obj 499 148 r patch-path;
 #X text 767 6 Not done:;
@@ -2092,7 +2092,7 @@
 #X text -214 302 Set Size for Pattern-Array;
 #X obj 101 426 r SAVE-S;
 #X obj 100 489 del 2;
-#X obj 117 327 hsl 128 15 0 127 0 1 \$0-pattern-length-s \$0-pattern-length-r PTRN-LENGTH 133 7 0 10 #fcfcfc #000000 #000000 1500 1;
+#X obj 117 327 hsl 128 15 0 127 0 1 \$0-pattern-length-s \$0-pattern-length-r PTRN-LENGTH 133 7 0 10 #fcfcfc #000000 #000000 1100 1;
 #X obj 117 362 hsl 128 15 0 127 0 1 \$0-offset-s \$0-offset-r OFFSET+/- 133 7 0 10 #fcfcfc #000000 #000000 7500 1;
 #X text 367 8 old function:;
 #X obj 1115 646 outlet;
@@ -2513,6 +2513,8 @@
 #X text 186 31 (ENCODERS);
 #X restore 340 821 pd \$0options;
 #X obj 1084 54 inlet;
+#X obj 891 2 r global-trigger;
+#X obj 1055 7 r global-reset;
 #X connect 6 0 75 0;
 #X connect 6 0 38 0;
 #X connect 7 0 38 0;
@@ -2573,4 +2575,6 @@
 #X connect 121 1 117 0;
 #X connect 122 0 121 0;
 #X connect 125 0 6 0;
+#X connect 126 0 8 0;
+#X connect 127 0 6 0;
 #X coords 0 -1 1 1 220 320 2 100 100;
