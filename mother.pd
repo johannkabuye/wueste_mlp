@@ -1514,14 +1514,14 @@
 #X coords 0 -1 1 1 220 60 2 100 100;
 #X restore 234 17 pd audio-to-hw;
 #X text 468 135 1 Opens and closes performance patches \; 2 Loads and keeps the sample library \; 3 Establishes sync over network (not yet) \; 4 Sends audio to hardware \; 5 Manages modes of the Midi Controller (Push MK1);
-#N canvas 63 88 1310 567 MIDI-to-hw 1;
+#N canvas 63 88 1310 567 MIDI-to-hw 0;
 #X obj 109 126 cnv 5 5 5 empty empty MIDI-CLOCK-DEVICE: 0 0 0 8 #fcfcfc #000000 0;
 #X obj 108 110 cnv 5 5 5 empty empty HARDWARE-MIDI-SETTINGS: 0 0 0 10 #fcfcfc #404040 0;
 #X floatatom 141 68 5 0 0 0 - - - 0;
 #X msg 141 32 0, f 6;
 #X obj 141 14 loadbang;
 #X obj 109 237 text define -k hw-midi-status;
-#A set 1 \;;
+#A set 8 \;;
 #X obj 109 219 text set hw-midi-status;
 #X obj 141 50 text get hw-midi-status;
 #X obj 108 135 hradio 16 1 0 8 empty empty empty 0 -8 0 10 #fcfcfc #000000 #000000 0;
