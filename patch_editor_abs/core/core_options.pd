@@ -6,7 +6,7 @@
 #X obj 19 40 t b b;
 #X obj 19 22 r \$1-options-button;
 #X text 17 5 Opens the Options-Subpatch:;
-#N canvas 721 264 175 189 \$1options 0;
+#N canvas 721 264 175 189 \$1options 1;
 #X text 11 10 Ableton-Push-Interface:;
 #X obj 15 70 hradio 16 1 0 8 \$1-main-menu-s \$1-main-menu-r Main-Menu 0 -8 0 10 #fcfcfc #000000 #000000 0;
 #X obj 15 110 hradio 16 1 0 8 \$1-sub-menu-s \$1-sub-menu-r Sub-Menu 0 -8 0 10 #fcfcfc #000000 #000000 0;

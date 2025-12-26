@@ -1521,7 +1521,7 @@
 #X msg 141 32 0, f 6;
 #X obj 141 14 loadbang;
 #X obj 109 237 text define -k hw-midi-status;
-#A set 8 \;;
+#A set 3.2126 \;;
 #X obj 109 219 text set hw-midi-status;
 #X obj 141 50 text get hw-midi-status;
 #X obj 108 135 hradio 16 1 0 8 empty empty empty 0 -8 0 10 #fcfcfc #000000 #000000 0;

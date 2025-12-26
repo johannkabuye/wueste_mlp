@@ -48,7 +48,7 @@ FONT_FAMILY_FALLBACK = "TkDefaultFont"
 # Row heights (pixels) - 11 rows total
 # Rows 4, 5, 8, 9 are set to 0px (invisible but keep message order)
 # Rows 2 and 6 sized to show visible arc area only (about 2/3 of circle)
-ROW_HEIGHTS = [60, 210, 60, 0, 0, 210, 60, 25, 30, 30, 30]
+ROW_HEIGHTS = [60, 210, 60, 0, 0, 210, 60, 15, 20, 40, 40]
 
 # Ring widget configuration
 RING_START_ANGLE = 210  # 7 o'clock position

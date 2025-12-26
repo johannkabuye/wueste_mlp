@@ -1,4 +1,4 @@
-#N canvas 194 126 1440 847 10;
+#N canvas 7 33 1425 832 10;
 #X declare -path ../000-SAMPLE-LIBRARY;
 #X declare -path ../patch_editor_abs;
 #X declare -path ../patch_editor_abs/test;
@@ -113,7 +113,7 @@
 #X obj 223 1191 channel 2;
 #X obj 446 1192 channel 3;
 #X obj 668 1191 channel 4;
-#X obj 890 1191 channel 5;
+#X obj 888 1191 channel 5;
 #X obj 1116 1188 channel 6;
 #X obj 1568 529 basic-lfo 15;
 #X obj 1567 722 basic-lfo 16;

@@ -7077,7 +7077,7 @@
 #X obj 531 -60 cnv 5 5 5 empty empty THIS_OBJECT 0 12 0 10 #fcfcfc #404040 0;
 #X obj 531 -87 cnv 5 5 5 empty empty MENU: 0 12 0 25 #fcfcfc #404040 0;
 #X text 663 -137 <-- for now removed from gui - when corrected it will be added again.;
-#X obj 126 245 tgl 45 1 \$0-clock-on-off-s empty PLAY/STOP 0 -7 0 10 #fcfcfc #000000 #000000 0 1;
+#X obj 126 245 tgl 45 1 \$0-clock-on-off-s empty PLAY/STOP 0 -7 0 10 #fcfcfc #000000 #000000 1 1;
 #X obj 1226 539 metro 100;
 #X obj 747 145 hsl 128 15 0 127 0 1 \$0-clock-clk-rate-s \$0-clock-clk-rate-r TEMPO 133 7 0 10 #fcfcfc #000000 #000000 3300 1;
 #X floatatom 845 130 5 0 0 1 BPM - - 10;

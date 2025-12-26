@@ -1,9 +1,7 @@
 #N canvas 203 231 846 347 10;
-#X obj 107 122 cnv 5 5 5 empty empty CLIPPER 0 0 0 12 -262144 -66577
-0;
-#X obj 190 122 cnv 5 5 5 empty \$0-instance-num 1 0 0 0 12 -262144
--66577 0;
-#X obj 105 109 cnv 5 5 5 empty empty IN 0 0 0 8 -262144 -66577 0;
+#X obj 107 122 cnv 5 5 5 empty empty CLIPPER 0 0 0 12 #fcfcfc #404040 0;
+#X obj 190 122 cnv 5 5 5 empty \$0-instance-num 3 0 0 0 12 #fcfcfc #404040 0;
+#X obj 105 109 cnv 5 5 5 empty empty IN 0 0 0 8 #fcfcfc #404040 0;
 #N canvas 1 50 450 300 hardclip 0;
 #X obj 104 77 inlet~;
 #X obj 104 100 clip~ -1 1;
@@ -36,7 +34,7 @@
 #X connect 7 0 8 0;
 #X connect 8 0 6 0;
 #X restore 458 156 pd algebraic;
-#N canvas 1 50 515 299 logistic 1;
+#N canvas 1 50 515 299 logistic 0;
 #X obj 104 79 inlet~;
 #X obj 106 197 outlet~;
 #X obj 131 116 abs~;
@@ -102,8 +100,7 @@
 #X obj 216 153 f \$1;
 #X obj 216 189 t f f f;
 #X obj 189 62 t b b;
-#X obj 35 378 bng 15 250 50 0 empty empty empty 17 7 0 10 -262144 -1
--1;
+#X obj 35 378 bng 15 250 50 0 empty empty empty 17 7 0 10 #fcfcfc #000000 #000000;
 #X obj 35 234 r SAVE-S;
 #X obj 95 400 pack f;
 #X msg 96 438 set \$1;
@@ -152,8 +149,7 @@
 #X text 99 193 x * ( 27 + x * x ) / ( 27 + 9 * x * x );
 #X obj 94 148 +~ 27;
 #X text 89 238 stolen from musicdsp.org via frank barknecht;
-#X text 115 58 nice analogue clipping \, assuming input is between
--3 and 3;
+#X text 115 58 nice analogue clipping \, assuming input is between -3 and 3;
 #X obj 27 47 clip~ -3 3;
 #X obj 27 16 inlet~;
 #X text 107 174 approximate inverse tan;
@@ -218,14 +214,10 @@
 #X connect 15 5 12 0;
 #X connect 16 0 0 0;
 #X restore 102 73 pd clipper-gui;
-#X obj 107 130 hradio 15 1 1 6 \$0-clipper-type-s \$0-clipper-type-r
-empty 67 7 0 10 -262144 -163394 -1 0;
-#X obj 107 145 cnv 3 90 15 empty empty empty 20 12 0 14 -1 -66577 0
-;
-#X obj 108 146 cnv 3 88 13 empty empty empty 20 12 0 14 -163394 -66577
-0;
-#X obj 113 153 cnv 4 5 5 empty \$0-clipper-type-gui-s ANALOG-CLIP 0
-0 0 10 -163394 -66577 0;
+#X obj 107 130 hradio 15 1 1 6 \$0-clipper-type-s \$0-clipper-type-r empty 67 7 0 10 #fcfcfc #9ce404 #000000 0;
+#X obj 107 145 cnv 3 90 15 empty empty empty 20 12 0 14 #000000 #404040 0;
+#X obj 108 146 cnv 3 88 13 empty empty empty 20 12 0 14 #9ce404 #404040 0;
+#X obj 113 153 cnv 4 5 5 empty \$0-clipper-type-gui-s ANALOG-CLIP 0 0 0 10 #9ce404 #404040 0;
 #N canvas 0 22 450 300 bypass 0;
 #X obj 46 59 inlet~;
 #X obj 47 105 outlet~;
