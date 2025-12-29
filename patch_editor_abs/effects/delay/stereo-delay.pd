@@ -124,7 +124,7 @@
 #X text 323 4 lowpass;
 #X obj 388 23 inlet;
 #X text 386 6 dry/wet;
-#X obj 29 156 hsl 128 15 0 127 0 1 \$0-stereo-delay-rate-left-s \$0-stereo-delay-rate-left-r RATE-LEFT 133 7 0 10 #fcfcfc #000000 #000000 1928 1;
+#X obj 29 156 hsl 128 15 0 127 0 1 \$0-stereo-delay-rate-left-s \$0-stereo-delay-rate-left-r RATE-LEFT 133 7 0 10 #fcfcfc #000000 #000000 4188 1;
 #X obj 29 186 hsl 128 15 0 127 0 1 \$0-stereo-delay-feedback-s \$0-stereo-delay-feedback-r FEEDBACK 133 7 0 10 #fcfcfc #000000 #000000 10500 1;
 #X obj 271 534 *~ -1;
 #X obj 4 514 *~;
@@ -199,7 +199,7 @@
 #X connect 25 0 24 1;
 #X connect 27 0 15 0;
 #X restore 271 207 pd delay1;
-#X obj 29 171 hsl 128 15 0 127 0 1 \$0-stereo-delay-rate-right-s \$0-stereo-delay-rate-right-r RATE-RIGHT 133 7 0 10 #fcfcfc #000000 #000000 1812 1;
+#X obj 29 171 hsl 128 15 0 127 0 1 \$0-stereo-delay-rate-right-s \$0-stereo-delay-rate-right-r RATE-RIGHT 133 7 0 10 #fcfcfc #000000 #000000 4574 1;
 #X obj 395 532 *~ -1;
 #X obj 395 510 *~;
 #X obj 396 560 min~ 1;
@@ -286,7 +286,7 @@
 #X obj 815 299 snapshot~;
 #X obj 815 321 t b f;
 #X obj 115 149 cnv 5 5 5 empty \$0-instance-num 6 0 0 0 12 #fcfcfc #404040 0;
-#N canvas 63 88 907 544 phaser 1;
+#N canvas 63 88 907 544 phaser 0;
 #X obj 74 38 inlet~;
 #X obj 414 28 inlet;
 #X obj 96 127 rpole~;
@@ -523,8 +523,10 @@
 #X connect 72 0 75 0;
 #X connect 74 0 70 0;
 #X connect 74 0 69 1;
+#X connect 74 0 76 1;
 #X connect 75 0 73 0;
 #X connect 75 0 69 2;
+#X connect 75 0 76 2;
 #X connect 76 0 39 0;
 #X restore 1106 583 pd dsp;
 #X f 33;
