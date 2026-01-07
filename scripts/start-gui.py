@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Molipe Control Panel
-System control interface matching main GUI design
+Molipe Control Panel - 90° Right Rotation
+Nested two-repo system: Core + Projects (nested inside)
 """
 
 import tkinter as tk
@@ -13,6 +13,9 @@ import socket
 import shutil
 from pathlib import Path
 import threading
+
+# Rotation configuration
+ROTATION = 90  # 90 degrees clockwise (right)
 
 # Font configuration (matching main GUI)
 FONT_FAMILY_PRIMARY = "Sunflower"
@@ -35,11 +38,14 @@ class MolipeControl:
         self.pd_running = False
         self.updating = False  # Track if update is in progress
         
-        # Paths - adjust these
-        self.pd_patch = "/home/patch/molipe_01/main.pd"
-        self.gui_script = "/home/patch/molipe_01/molipe_gui.py"
-        self.repo_path = str(Path.home() / "molipe_01")  # ~/molipe_01
-        self.backup_path = str(Path.home() / "molipe_01.backup")
+        # NESTED REPO STRUCTURE
+        self.molipe_root = str(Path.home() / "molipe")              # Main molipe folder
+        self.core_repo_path = self.molipe_root                      # Core repo (READ-ONLY)
+        self.projects_repo_path = str(Path(self.molipe_root) / "projects")  # Nested projects repo (READ/WRITE)
+        
+        # Main project paths
+        self.pd_patch = f"{self.molipe_root}/mother.pd"
+        self.gui_script = f"{self.molipe_root}/scripts/molipe_gui.py"
         
         # Check internet connectivity
         self.has_internet = self.check_internet()
@@ -49,8 +55,10 @@ class MolipeControl:
         
         # Store reference to container for dynamic UI updates
         self.container = None
-        self.update_button = None
-        self.no_internet_label = None
+        self.update_core_button = None
+        self.update_projects_button = None
+        self.no_internet_label1 = None
+        self.no_internet_label2 = None
         
         # Build UI (includes geometry setup)
         self._build_ui()
@@ -66,6 +74,13 @@ class MolipeControl:
         
         # Start periodic internet connectivity check
         self.check_connectivity_periodically()
+    
+    def transform_coordinates(self, x, y):
+        """Transform touch coordinates for 90° right rotation"""
+        if ROTATION == 90:
+            # 90° clockwise: new_x = y, new_y = original_width - x
+            return y, 1280 - x
+        return x, y
     
     def check_internet(self, host="8.8.8.8", port=53, timeout=3):
         """
@@ -94,32 +109,50 @@ class MolipeControl:
     def _update_connectivity_ui(self):
         """Update UI based on connectivity status change"""
         if self.has_internet:
-            # Internet connected - show update button
-            if self.no_internet_label:
-                self.no_internet_label.grid_forget()
-                self.no_internet_label.destroy()
-                self.no_internet_label = None
+            # Internet connected - show both update buttons
             
-            if not self.update_button:
-                self.update_button = self._create_button(
+            # Update Core button (column 1)
+            if self.no_internet_label1:
+                self.no_internet_label1.grid_forget()
+                self.no_internet_label1.destroy()
+                self.no_internet_label1 = None
+            
+            if not self.update_core_button:
+                self.update_core_button = self._create_button(
+                    self.container,
+                    "↻ UPDATE\nCORE",
+                    self.update_core
+                )
+                self.update_core_button.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
+            
+            # Update Projects button (column 2)
+            if self.no_internet_label2:
+                self.no_internet_label2.grid_forget()
+                self.no_internet_label2.destroy()
+                self.no_internet_label2 = None
+            
+            if not self.update_projects_button:
+                self.update_projects_button = self._create_button(
                     self.container,
                     "↻ UPDATE\nPROJECTS",
                     self.update_projects
                 )
-                self.update_button.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
+                self.update_projects_button.grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
             
             # Update status if not currently doing something
             if not self.updating and not self.pd_running:
                 self.update_status("ONLINE")
         else:
-            # Internet disconnected - show no internet label
-            if self.update_button:
-                self.update_button.grid_forget()
-                self.update_button.destroy()
-                self.update_button = None
+            # Internet disconnected - show no internet labels
             
-            if not self.no_internet_label:
-                self.no_internet_label = tk.Label(
+            # Core button
+            if self.update_core_button:
+                self.update_core_button.grid_forget()
+                self.update_core_button.destroy()
+                self.update_core_button = None
+            
+            if not self.no_internet_label1:
+                self.no_internet_label1 = tk.Label(
                     self.container,
                     text="NO\nINTERNET",
                     font=self.button_font,
@@ -131,7 +164,28 @@ class MolipeControl:
                     padx=20,
                     pady=20
                 )
-                self.no_internet_label.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
+                self.no_internet_label1.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
+            
+            # Projects button
+            if self.update_projects_button:
+                self.update_projects_button.grid_forget()
+                self.update_projects_button.destroy()
+                self.update_projects_button = None
+            
+            if not self.no_internet_label2:
+                self.no_internet_label2 = tk.Label(
+                    self.container,
+                    text="NO\nINTERNET",
+                    font=self.button_font,
+                    bg="#000000",
+                    fg="#303030",
+                    cursor="none",
+                    bd=0,
+                    relief="flat",
+                    padx=20,
+                    pady=20
+                )
+                self.no_internet_label2.grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
             
             # Update status if not currently doing something
             if not self.updating and not self.pd_running:
@@ -173,7 +227,7 @@ class MolipeControl:
             )
     
     def _create_button(self, parent, text, command):
-        """Create a custom button using Label (works on macOS)"""
+        """Create a custom button using Label with coordinate transformation"""
         btn = tk.Label(
             parent,
             text=text,
@@ -186,16 +240,29 @@ class MolipeControl:
             padx=20,
             pady=20
         )
-        btn.bind("<Button-1>", lambda e: command())
+        # Wrap command with coordinate transformation
+        def handle_click(event):
+            # Transform coordinates if needed
+            if ROTATION == 90:
+                # Coordinates are already transformed by tkinter for our rotated window
+                pass
+            command()
+        
+        btn.bind("<Button-1>", handle_click)
         return btn
     
     def _build_ui(self):
-        """Build the control panel UI."""
-        # Set geometry to match main GUI
-        if sys.platform.startswith("linux"):
-            self.root.geometry("1280x720+0+0")
+        """Build the control panel UI with rotation."""
+        # Set geometry with swapped dimensions for 90° rotation
+        if ROTATION == 90:
+            width, height = 720, 1280
         else:
-            self.root.geometry("1280x720+100+100")  # MacBook positioning
+            width, height = 1280, 720
+        
+        if sys.platform.startswith("linux"):
+            self.root.geometry(f"{width}x{height}+0+0")
+        else:
+            self.root.geometry(f"{width}x{height}+100+100")  # MacBook positioning
         
         # Main container
         self.container = tk.Frame(self.root, bg="#000000")
@@ -223,17 +290,24 @@ class MolipeControl:
         )
         self.start_button.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
         
-        # Update button only if internet is available
+        # Update buttons only if internet is available
         if self.has_internet:
-            self.update_button = self._create_button(
+            self.update_core_button = self._create_button(
+                self.container,
+                "↻ UPDATE\nCORE",
+                self.update_core
+            )
+            self.update_core_button.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
+            
+            self.update_projects_button = self._create_button(
                 self.container,
                 "↻ UPDATE\nPROJECTS",
                 self.update_projects
             )
-            self.update_button.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
+            self.update_projects_button.grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
         else:
-            # Show "no internet" placeholder
-            self.no_internet_label = tk.Label(
+            # Show "no internet" placeholders
+            self.no_internet_label1 = tk.Label(
                 self.container,
                 text="NO\nINTERNET",
                 font=self.button_font,
@@ -245,12 +319,25 @@ class MolipeControl:
                 padx=20,
                 pady=20
             )
-            self.no_internet_label.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
+            self.no_internet_label1.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
+            
+            self.no_internet_label2 = tk.Label(
+                self.container,
+                text="NO\nINTERNET",
+                font=self.button_font,
+                bg="#000000",
+                fg="#303030",
+                cursor="none",
+                bd=0,
+                relief="flat",
+                padx=20,
+                pady=20
+            )
+            self.no_internet_label2.grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
         
-        # Empty cells
-        for col in range(2, 4):
-            empty_frame = tk.Frame(self.container, bg="#000000", width=150, height=80)
-            empty_frame.grid(row=1, column=col, padx=10, pady=10)
+        # Empty cell
+        empty_frame = tk.Frame(self.container, bg="#000000", width=150, height=80)
+        empty_frame.grid(row=1, column=3, padx=10, pady=10)
         
         # Row 2: Shutdown and 3 empty cells
         self._create_button(
@@ -368,22 +455,42 @@ class MolipeControl:
         except Exception as e:
             self.update_status(f"ERROR: {e}", error=True)
     
-    def create_backup(self):
-        """Create backup of project before updating"""
+    def create_backup(self, repo_path, backup_suffix="backup"):
+        """Create backup of repository before updating"""
         try:
+            backup_path = f"{repo_path}.{backup_suffix}"
+            
             # Remove old backup if exists
-            if os.path.exists(self.backup_path):
-                shutil.rmtree(self.backup_path)
+            if os.path.exists(backup_path):
+                shutil.rmtree(backup_path)
             
             # Create new backup
-            shutil.copytree(self.repo_path, self.backup_path)
+            shutil.copytree(repo_path, backup_path)
             return True
         except Exception as e:
             print(f"Backup failed: {e}")
             return False
     
+    def update_core(self):
+        """Update core from public GitHub (read-only, excludes projects/)"""
+        self._update_repo(
+            self.core_repo_path,
+            "CORE",
+            can_restart=True,  # Restart PD after core update
+            backup_suffix="core_backup"
+        )
+    
     def update_projects(self):
-        """Update projects from GitHub with backup"""
+        """Update projects from user's GitHub (read/write, nested repo)"""
+        self._update_repo(
+            self.projects_repo_path,
+            "PROJECTS",
+            can_restart=False,  # Don't restart PD for project changes
+            backup_suffix="projects_backup"
+        )
+    
+    def _update_repo(self, repo_path, repo_name, can_restart=False, backup_suffix="backup"):
+        """Generic repo update with backup"""
         if self.updating:
             return  # Already updating
         
@@ -391,30 +498,42 @@ class MolipeControl:
             self.update_status("NO INTERNET", error=True)
             return
         
-        # Disable button during update
-        self.updating = True
-        if self.update_button:
-            self.update_button.config(fg="#606060")  # Dim button
+        # Check if repo exists
+        if not os.path.exists(repo_path):
+            self.update_status(f"{repo_name} NOT FOUND", error=True)
+            return
         
-        self.update_status("CREATING BACKUP...")
+        # Check if it's a git repo
+        if not os.path.exists(os.path.join(repo_path, ".git")):
+            self.update_status(f"{repo_name} NOT A GIT REPO", error=True)
+            return
+        
+        # Disable buttons during update
+        self.updating = True
+        if self.update_core_button:
+            self.update_core_button.config(fg="#606060")
+        if self.update_projects_button:
+            self.update_projects_button.config(fg="#606060")
+        
+        self.update_status(f"BACKUP {repo_name}...")
         self.root.update()
         
-        # Create backup in separate thread to not block UI
+        # Update in separate thread to not block UI
         def do_update():
             # Create backup
-            backup_success = self.create_backup()
+            backup_success = self.create_backup(repo_path, backup_suffix)
             if not backup_success:
-                self.root.after(0, lambda: self.update_status("BACKUP FAILED", error=True))
+                self.root.after(0, lambda: self.update_status(f"BACKUP FAILED ({repo_name})", error=True))
                 self.root.after(0, self._finish_update)
                 return
             
-            self.root.after(0, lambda: self.update_status("PULLING FROM GITHUB..."))
+            self.root.after(0, lambda: self.update_status(f"PULLING {repo_name}..."))
             
             # Pull from GitHub
             try:
                 result = subprocess.run(
                     ['git', 'pull', 'origin', 'main'],
-                    cwd=self.repo_path,
+                    cwd=repo_path,
                     capture_output=True,
                     text=True,
                     timeout=30
@@ -422,18 +541,18 @@ class MolipeControl:
                 
                 if result.returncode == 0:
                     if "Already up to date" in result.stdout or "Already up-to-date" in result.stdout:
-                        self.root.after(0, lambda: self.update_status("✓ ALREADY UP TO DATE"))
+                        self.root.after(0, lambda: self.update_status(f"✓ {repo_name} UP TO DATE"))
                     else:
-                        self.root.after(0, lambda: self.update_status("✓ UPDATED SUCCESSFULLY"))
-                        # Auto restart PD after successful update
-                        if self.pd_running:
+                        self.root.after(0, lambda: self.update_status(f"✓ {repo_name} UPDATED"))
+                        # Auto restart PD only if updating core
+                        if can_restart and self.pd_running:
                             self.root.after(2000, self.restart_pd)
                 else:
                     error_msg = result.stderr.strip() if result.stderr else "UPDATE FAILED"
                     self.root.after(0, lambda: self.update_status(f"✗ {error_msg}", error=True))
             
             except subprocess.TimeoutExpired:
-                self.root.after(0, lambda: self.update_status("✗ UPDATE TIMEOUT", error=True))
+                self.root.after(0, lambda: self.update_status(f"✗ {repo_name} TIMEOUT", error=True))
             except Exception as e:
                 self.root.after(0, lambda: self.update_status(f"✗ ERROR: {str(e)}", error=True))
             
@@ -444,10 +563,12 @@ class MolipeControl:
         thread.start()
     
     def _finish_update(self):
-        """Re-enable button after update completes"""
+        """Re-enable buttons after update completes"""
         self.updating = False
-        if self.update_button:
-            self.update_button.config(fg="#ffffff")  # Restore button
+        if self.update_core_button:
+            self.update_core_button.config(fg="#ffffff")
+        if self.update_projects_button:
+            self.update_projects_button.config(fg="#ffffff")
     
     def shutdown(self):
         """Shutdown the system - NO CONFIRMATION"""
