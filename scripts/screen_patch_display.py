@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Patch Display Screen - UDP-controlled GUI integrated with molipe navigation
-Combines the molipe_gui.py display with the screen system architecture
+Full integration of molipe_gui.py with screen system
 """
 import os
 import sys
@@ -16,89 +16,62 @@ from dataclasses import dataclass
 import tkinter as tk
 from tkinter import font as tkfont
 
-# ---------------- Configuration ----------------
-# Protocol version
+# Configuration
 PROTOCOL_VERSION = "1.0"
-
-# Network settings
 HOST = "0.0.0.0"
 PORT = 9001
 SOCKET_TIMEOUT_SEC = 1.0
-SOCKET_BUFFER_SIZE = 1 << 20  # 1MB
+SOCKET_BUFFER_SIZE = 1 << 20
 
-# Grid layout (11 rows)
 DEFAULT_ROWS = 11
 COLS_PER_ROW = [4, 4, 4, 8, 4, 4, 4, 8, 4, 8, 8]
-
-# 0-based indices of rows that use BIG font
 BIG_FONT_ROWS = {1, 2, 5, 6, 9, 10}
-
-# Rows that contain bar widgets
 BAR_ROWS = {3, 7}
 
-# Font configuration
 SMALL_FONT_PT = 27
 BIG_FONT_PT = 29
 HEAD_ROW_BONUS_PT = 0
 FONT_FAMILY_PRIMARY = "Sunflower"
 FONT_FAMILY_FALLBACK = "TkDefaultFont"
 
-# Row heights (pixels)
 ROW_HEIGHTS = [60, 210, 50, 0, 0, 210, 50, 5, 20, 50, 50]
 
-# Ring widget configuration
 RING_START_ANGLE = 210
 RING_END_ANGLE = 330
 RING_SWEEP_MAX = 240
 RING_CENTER_FONT_SIZE = 35
-
-# Fixed radius values
 RING_INNER_RADIUS = 70
 RING_OUTER_RADIUS = 103
 RING_EXTRA1_RADIUS = 120
 RING_EXTRA2_RADIUS = 127
-
-# Arc widths
 RING_OUTER_ARC_WIDTH = 10
 RING_INNER_ARC_WIDTH = 27
 RING_EXTRA_ARC_WIDTH = 4
 RING_EXTRA_DOT_SIZE = 8
 
-# Bar widget configuration
 BAR_BORDER_COLOR = "#303030"
 BAR_FILL_COLOR = "#606060"
 BAR_BG_COLOR = "#000000"
 BAR_GAP_PIXELS = 2
 BAR_BORDER_WIDTH = 2
-BARS_PER_CELL = 1
 
-# Performance tuning
-POLL_INTERVAL_MS = 33  # ~30fps
+POLL_INTERVAL_MS = 33
 MAX_APPLIES_PER_TICK = 50
-HEARTBEAT_TIMEOUT_SEC = 30.0
 
-# Logging
 LOG_LEVEL = logging.ERROR
-LOG_FORMAT = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-
-logging.basicConfig(level=LOG_LEVEL, format=LOG_FORMAT)
+logging.basicConfig(level=LOG_LEVEL)
 logger = logging.getLogger(__name__)
 
-
-# ---------------- Utility Functions ----------------
 def validate_color(color: str) -> bool:
-    """Validate color string format."""
     if not color:
         return False
     if color.startswith('#'):
         return len(color) in (4, 7, 9) and all(c in '0123456789abcdefABCDEF' for c in color[1:])
     return True
 
-
 _color_cache: Dict[Tuple[str, float], str] = {}
 
 def lighten_color(hex_color: str, factor: float) -> str:
-    """Lighten a hex color by a factor (0.0 to 1.0). Cached for performance."""
     cache_key = (hex_color, factor)
     if cache_key in _color_cache:
         return _color_cache[cache_key]
@@ -129,13 +102,10 @@ def lighten_color(hex_color: str, factor: float) -> str:
     except (ValueError, IndexError):
         return hex_color
 
-
 @dataclass
 class PerformanceMetrics:
-    """Track performance metrics."""
     messages_received: int = 0
     messages_processed: int = 0
-    messages_dropped: int = 0
     last_message_time: float = 0.0
     
     def update_received(self):
@@ -144,15 +114,8 @@ class PerformanceMetrics:
     
     def update_processed(self):
         self.messages_processed += 1
-    
-    def update_dropped(self):
-        self.messages_dropped += 1
 
-
-# ---------------- Horizontal Bar Widget ----------------
 class HorizontalBar(tk.Canvas):
-    """Horizontal bar that fills from left to right based on value (1-127)."""
-    
     def __init__(self, master, width: int = 200, height: int = 20,
                  fill_color: str = BAR_FILL_COLOR,
                  border_color: str = BAR_BORDER_COLOR,
@@ -177,7 +140,6 @@ class HorizontalBar(tk.Canvas):
     
     @staticmethod
     def _clip_value(v: Any) -> int:
-        """Clip value to valid range [0, 127]."""
         try:
             v = int(v)
         except (ValueError, TypeError):
@@ -185,12 +147,10 @@ class HorizontalBar(tk.Canvas):
         return max(0, min(127, v))
     
     def set_value(self, value: int) -> None:
-        """Set bar value (0-127)."""
         self._value = self._clip_value(value)
         self._update_fill()
     
     def _redraw(self) -> None:
-        """Redraw the bar."""
         self.delete("all")
         
         w = self.winfo_width()
@@ -216,7 +176,6 @@ class HorizontalBar(tk.Canvas):
         self._update_fill()
     
     def _update_fill(self) -> None:
-        """Update the fill rectangle based on current value."""
         if self._fill_rect is None:
             return
         
@@ -240,15 +199,7 @@ class HorizontalBar(tk.Canvas):
         except tk.TclError:
             pass
 
-
-# ---------------- Dual Ring Widget ----------------
 class DualRing(tk.Frame):
-    """
-    Two concentric arcs plus two additional thin outer arcs.
-    All arcs start at 7 o'clock sweeping clockwise to ~4 o'clock.
-    CENTER shows inner arc's current value or override text.
-    """
-    
     def __init__(self, master, size: int = 200, fg_outer: str = "#606060", 
                  fg_inner: str = "#ffffff", bg: str = "#000000", 
                  w_outer: int = None, w_inner: int = None, 
@@ -296,7 +247,6 @@ class DualRing(tk.Frame):
     
     @staticmethod
     def _clip_value(v: Any) -> int:
-        """Clip value to valid range [0, 127]."""
         try:
             v = int(v)
         except (ValueError, TypeError):
@@ -304,38 +254,32 @@ class DualRing(tk.Frame):
         return max(0, min(127, v))
     
     def set_values(self, outer_v: int, inner_v: int) -> None:
-        """Set both outer and inner ring values."""
         self._outer_val = self._clip_value(outer_v)
         self._inner_val = self._clip_value(inner_v)
         self._update_extents()
         self._update_label()
     
     def set_outer(self, v: int) -> None:
-        """Set outer ring value."""
         self._outer_val = self._clip_value(v)
         self._update_extents()
     
     def set_inner(self, v: int) -> None:
-        """Set inner ring value."""
         self._inner_val = self._clip_value(v)
         self._update_extents()
         self._update_label()
     
     def set_extra_arcs(self, val1: int, val2: int) -> None:
-        """Set the two extra outer arc values."""
         self._extra_arc1_val = self._clip_value(val1)
         self._extra_arc2_val = self._clip_value(val2)
         self._update_extents()
     
     def set_center_text(self, text: Optional[str]) -> None:
-        """Override the center text display."""
         self._center_override = text if text else None
         self._update_label()
     
     def restyle(self, fg_outer: Optional[str] = None, fg_inner: Optional[str] = None,
                 bg: Optional[str] = None, w_outer: Optional[int] = None,
                 w_inner: Optional[int] = None, text_color: Optional[str] = None) -> None:
-        """Update ring styling."""
         if fg_outer is not None and validate_color(fg_outer):
             self._fg_outer = fg_outer
         if fg_inner is not None and validate_color(fg_inner):
@@ -359,20 +303,17 @@ class DualRing(tk.Frame):
         self._redraw()
     
     def resize(self, size_px: int) -> None:
-        """Resize the ring widget display."""
         self._display_size = int(size_px)
         self.canvas.config(width=self._display_size, height=self._display_size)
         self._redraw()
     
     def _bbox_for_radius(self, radius: int) -> Tuple[int, int, int, int]:
-        """Calculate bounding box for arc at specific radius from center."""
         w = max(2, self.canvas.winfo_width())
         h = max(2, self.canvas.winfo_height())
         cx, cy = w // 2, h // 2
         return (cx - radius, cy - radius, cx + radius, cy + radius)
     
     def _get_light_colors(self) -> Tuple[str, str]:
-        """Get cached light colors or calculate if needed."""
         if self._cached_light_color1 is None or self._fg_inner != self._last_fg_inner:
             self._cached_light_color1 = lighten_color(self._fg_inner, 0.3)
             self._cached_light_color2 = lighten_color(self._fg_inner, 0.5)
@@ -380,7 +321,6 @@ class DualRing(tk.Frame):
         return self._cached_light_color1, self._cached_light_color2
     
     def _redraw(self) -> None:
-        """Redraw all ring elements."""
         self.canvas.delete("all")
         
         inner_bbox = self._bbox_for_radius(RING_INNER_RADIUS)
@@ -390,13 +330,11 @@ class DualRing(tk.Frame):
         
         light_color1, light_color2 = self._get_light_colors()
         
-        # Background tracks
         self.canvas.create_oval(*inner_bbox, outline="#000", width=self._w_inner)
         self.canvas.create_oval(*outer_bbox, outline="#000", width=self._w_outer)
         self.canvas.create_oval(*extra_arc1_bbox, outline="#000", width=RING_EXTRA_ARC_WIDTH)
         self.canvas.create_oval(*extra_arc2_bbox, outline="#000", width=RING_EXTRA_ARC_WIDTH)
         
-        # Value arcs
         self._inner_arc_id = self.canvas.create_arc(
             *inner_bbox, start=RING_START_ANGLE, extent=0, style="arc",
             outline=self._fg_inner, width=self._w_inner
@@ -417,7 +355,6 @@ class DualRing(tk.Frame):
             outline=light_color2, width=RING_EXTRA_ARC_WIDTH
         )
         
-        # Dots for extra arcs
         self._extra_dot1_id = self.canvas.create_oval(
             0, 0, RING_EXTRA_DOT_SIZE, RING_EXTRA_DOT_SIZE,
             fill=light_color1, outline=""
@@ -427,7 +364,6 @@ class DualRing(tk.Frame):
             fill=light_color2, outline=""
         )
         
-        # Center value label
         cx, cy = self.canvas.winfo_width() // 2, self.canvas.winfo_height() // 2
         font = (FONT_FAMILY_PRIMARY, RING_CENTER_FONT_SIZE, "bold")
         display_val = max(1, int(self._inner_val))
@@ -435,7 +371,6 @@ class DualRing(tk.Frame):
             cx, cy, text=str(display_val), fill=self._text_color, font=font
         )
         
-        # Extra arc value labels
         extra_font = (FONT_FAMILY_PRIMARY, 24, "bold")
         self._extra_label2_id = self.canvas.create_text(
             0, 5, text="0", fill=light_color2, font=extra_font, anchor="nw"
@@ -447,7 +382,6 @@ class DualRing(tk.Frame):
         self._update_extents()
     
     def _update_extents(self) -> None:
-        """Update arc extents based on current values."""
         ext_outer = -RING_SWEEP_MAX * (self._outer_val / 127.0)
         ext_inner = -RING_SWEEP_MAX * (self._inner_val / 127.0)
         ext_extra1 = -RING_SWEEP_MAX * (self._extra_arc1_val / 127.0)
@@ -487,7 +421,6 @@ class DualRing(tk.Frame):
     
     def _update_dots(self, ext_extra1: float, ext_extra2: float, 
                      light_color1: str, light_color2: str) -> None:
-        """Update dot positions and extra arc labels."""
         import math
         
         w = self.canvas.winfo_width()
@@ -531,7 +464,6 @@ class DualRing(tk.Frame):
             except tk.TclError:
                 pass
         
-        # Update extra arc value labels
         if self._extra_label1_id is not None:
             try:
                 self.canvas.itemconfig(
@@ -555,7 +487,6 @@ class DualRing(tk.Frame):
                 pass
     
     def _update_label(self) -> None:
-        """Update center label text."""
         if self._label_id is None:
             return
         
@@ -574,7 +505,6 @@ class DualRing(tk.Frame):
             pass
 
 
-# ---------------- Patch Display Screen ----------------
 class PatchDisplayScreen(tk.Frame):
     """Patch display screen with UDP control and HOME button"""
     
@@ -582,35 +512,28 @@ class PatchDisplayScreen(tk.Frame):
         super().__init__(parent, bg="#000000")
         self.app = app
         
-        # Display configuration
         self.rows = DEFAULT_ROWS
         self.cols_per_row = list(COLS_PER_ROW)
         
-        # Initialize fonts
         self._init_fonts()
         
-        # UDP listener
         self.udp_queue = Queue()
         self.metrics = PerformanceMetrics()
         self.udp_thread = None
         
-        # UI components
         self.vars: List[List[tk.StringVar]] = []
         self.labels: List[List[tk.Label]] = []
         self.cell_frames: List[List[tk.Frame]] = []
         self.row_frames: List[tk.Frame] = []
         
-        # Build UI
         self._build_ui()
         
-        # State caches
         self.last_text: List[List[Optional[str]]] = []
         self.last_fg: List[List[Optional[str]]] = []
         self.last_bg: List[List[Optional[str]]] = []
         self.last_anchor: List[List[Optional[str]]] = []
         self._init_caches()
         
-        # Ring widget storage
         self.ring_holders: List[List[Optional[tk.Frame]]] = [
             [None] * self.cols_per_row[r] for r in range(self.rows)
         ]
@@ -618,7 +541,6 @@ class PatchDisplayScreen(tk.Frame):
             [None] * self.cols_per_row[r] for r in range(self.rows)
         ]
         
-        # Bar widget storage
         self.bar_holders: List[List[Optional[tk.Frame]]] = [
             [None] * self.cols_per_row[r] for r in range(self.rows)
         ]
@@ -626,17 +548,12 @@ class PatchDisplayScreen(tk.Frame):
             [None] * self.cols_per_row[r] for r in range(self.rows)
         ]
         
-        # Pending updates
         self.pending_latest: Dict[Tuple, Any] = {}
         
-        # Start UDP listener
         self._start_udp_listener()
-        
-        # Start processing loop
         self.after(POLL_INTERVAL_MS, self._drain_and_apply)
     
     def _init_fonts(self) -> None:
-        """Initialize fonts with fallback handling."""
         try:
             self.small_font = tkfont.Font(
                 family=FONT_FAMILY_PRIMARY, 
@@ -671,14 +588,13 @@ class PatchDisplayScreen(tk.Frame):
             )
     
     def _init_caches(self) -> None:
-        """Initialize state caches."""
         self.last_text = [[None] * self.cols_per_row[r] for r in range(self.rows)]
         self.last_fg = [[None] * self.cols_per_row[r] for r in range(self.rows)]
         self.last_bg = [[None] * self.cols_per_row[r] for r in range(self.rows)]
         self.last_anchor = [[None] * self.cols_per_row[r] for r in range(self.rows)]
     
     def _build_ui(self):
-        """Build the patch display UI"""
+        """Build the patch display UI with HOME button"""
         
         # HOME button in upper left corner
         self.home_button = tk.Label(
@@ -769,7 +685,6 @@ class PatchDisplayScreen(tk.Frame):
         """Start UDP listener thread"""
         
         def parse_message(line: str) -> Optional[Tuple]:
-            """Parse incoming UDP message."""
             if not line:
                 return None
             
@@ -783,43 +698,36 @@ class PatchDisplayScreen(tk.Frame):
             head = parts[0].upper()
             
             try:
-                # ARC c r val1 val2
                 if head == "ARC" and len(parts) >= 5:
                     c, r = int(parts[1]), int(parts[2])
                     val1, val2 = int(parts[3]), int(parts[4])
                     return ("ARC_VALUE", r, c, val1, val2)
                 
-                # BAR r c value
                 if head == "BAR" and len(parts) >= 4:
                     r, c = int(parts[1]), int(parts[2])
                     value = int(parts[3])
                     return ("BAR_VALUE", r, c, value)
                 
-                # ALIGN r c align
                 if head == "ALIGN" and len(parts) >= 4:
                     r, c, align = int(parts[1]), int(parts[2]), parts[3]
                     return ("ALIGN_CELL", r, c, align)
                 
-                # BG r c bg
                 if head == "BG" and len(parts) >= 4:
                     r, c, bg = int(parts[1]), int(parts[2]), parts[3]
                     return ("BG_CELL", r, c, bg)
                 
-                # RING c r fg_out fg_in bg size w_out w_in
                 if head == "RING" and len(parts) >= 9:
                     c, r = int(parts[1]), int(parts[2])
                     fg_out, fg_in, bg = parts[3], parts[4], parts[5]
                     size_px, w_out, w_in = int(parts[6]), int(parts[7]), int(parts[8])
                     return ("RING_STYLE", r, c, fg_out, fg_in, bg, size_px, w_out, w_in)
                 
-                # RINGVAL c r outer inner [text...]
                 if head == "RINGVAL" and len(parts) >= 5:
                     c, r = int(parts[1]), int(parts[2])
                     outer, inner = int(parts[3]), int(parts[4])
                     text = " ".join(parts[5:]).rstrip(";") if len(parts) > 5 else None
                     return ("RING_VALUE", r, c, outer, inner, text)
                 
-                # RINGSET c r outer inner fg_out fg_in bg size w_out w_in
                 if head == "RINGSET" and len(parts) >= 11:
                     c, r = int(parts[1]), int(parts[2])
                     outer, inner = int(parts[3]), int(parts[4])
@@ -827,7 +735,6 @@ class PatchDisplayScreen(tk.Frame):
                     size_px, w_out, w_in = int(parts[8]), int(parts[9]), int(parts[10])
                     return ("RING_SET", r, c, outer, inner, fg_out, fg_in, bg, size_px, w_out, w_in)
                 
-                # SET c r fg bg [align] text...
                 if len(parts) >= 5:
                     c, r = int(parts[0]), int(parts[1])
                     
@@ -846,7 +753,6 @@ class PatchDisplayScreen(tk.Frame):
             return None
         
         def listener_loop():
-            """Main UDP listener loop."""
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
             
             try:
@@ -871,8 +777,6 @@ class PatchDisplayScreen(tk.Frame):
                     if msg:
                         self.udp_queue.put(msg)
                         self.metrics.update_processed()
-                    else:
-                        self.metrics.update_dropped()
                 
                 except socket.timeout:
                     continue
@@ -883,9 +787,8 @@ class PatchDisplayScreen(tk.Frame):
         self.udp_thread.start()
     
     def _drain_and_apply(self):
-        """Process queued UDP messages and apply to UI"""
+        """Process queued UDP messages"""
         
-        # Drain queue into pending updates
         while True:
             try:
                 msg = self.udp_queue.get_nowait()
@@ -926,10 +829,8 @@ class PatchDisplayScreen(tk.Frame):
                 _, r, c, val1, val2 = msg
                 self.pending_latest[("ARC", r, c)] = (val1, val2)
         
-        # Apply updates in priority order
         applied = 0
         
-        # 1. Background changes
         for key, bg in list(self.pending_latest.items()):
             if applied >= MAX_APPLIES_PER_TICK:
                 break
@@ -939,7 +840,6 @@ class PatchDisplayScreen(tk.Frame):
                 del self.pending_latest[key]
                 applied += 1
         
-        # 2. Alignment changes
         for key, align in list(self.pending_latest.items()):
             if applied >= MAX_APPLIES_PER_TICK:
                 break
@@ -949,7 +849,6 @@ class PatchDisplayScreen(tk.Frame):
                 del self.pending_latest[key]
                 applied += 1
         
-        # 3. Bar values
         for key, value in list(self.pending_latest.items()):
             if applied >= MAX_APPLIES_PER_TICK:
                 break
@@ -959,7 +858,6 @@ class PatchDisplayScreen(tk.Frame):
                 del self.pending_latest[key]
                 applied += 1
         
-        # 4. Ring set (style + value together)
         for key, payload in list(self.pending_latest.items()):
             if applied >= MAX_APPLIES_PER_TICK:
                 break
@@ -970,7 +868,6 @@ class PatchDisplayScreen(tk.Frame):
                 del self.pending_latest[key]
                 applied += 1
         
-        # 5. Ring style
         for key, payload in list(self.pending_latest.items()):
             if applied >= MAX_APPLIES_PER_TICK:
                 break
@@ -981,7 +878,6 @@ class PatchDisplayScreen(tk.Frame):
                 del self.pending_latest[key]
                 applied += 1
         
-        # 6. Ring value
         for key, payload in list(self.pending_latest.items()):
             if applied >= MAX_APPLIES_PER_TICK:
                 break
@@ -994,7 +890,6 @@ class PatchDisplayScreen(tk.Frame):
                 del self.pending_latest[key]
                 applied += 1
         
-        # 6b. Extra arc values
         for key, payload in list(self.pending_latest.items()):
             if applied >= MAX_APPLIES_PER_TICK:
                 break
@@ -1005,7 +900,6 @@ class PatchDisplayScreen(tk.Frame):
                 del self.pending_latest[key]
                 applied += 1
         
-        # 7. Text cell updates
         for key, payload in list(self.pending_latest.items()):
             if applied >= MAX_APPLIES_PER_TICK:
                 break
@@ -1016,13 +910,9 @@ class PatchDisplayScreen(tk.Frame):
                 del self.pending_latest[key]
                 applied += 1
         
-        # Schedule next tick
         self.after(POLL_INTERVAL_MS, self._drain_and_apply)
     
-    # ---- Bar Widget Methods ----
-    
     def _ensure_bars(self, r: int, c: int) -> None:
-        """Ensure bar widget exists for a cell."""
         if not (0 <= r < self.rows) or not (0 <= c < self.cols_per_row[r]):
             return
         
@@ -1044,7 +934,6 @@ class PatchDisplayScreen(tk.Frame):
             self.bars[r][c] = bar
     
     def set_bar_value(self, r: int, c: int, value: int) -> None:
-        """Set bar value."""
         if not (0 <= r < self.rows) or not (0 <= c < self.cols_per_row[r]):
             return
         
@@ -1057,11 +946,8 @@ class PatchDisplayScreen(tk.Frame):
         if bar:
             bar.set_value(value)
     
-    # ---- Ring Widget Methods ----
-    
     def _ensure_ring(self, r: int, c: int, fg_out: str, fg_in: str, 
                      bg: str, size_px: int, w_out: int, w_in: int) -> None:
-        """Ensure ring widget exists with given parameters."""
         if not (0 <= r < self.rows) or not (0 <= c < self.cols_per_row[r]):
             return
         
@@ -1089,11 +975,9 @@ class PatchDisplayScreen(tk.Frame):
     
     def set_ring_style(self, r: int, c: int, fg_out: str, fg_in: str, 
                       bg: str, size_px: int, w_out: int, w_in: int) -> None:
-        """Set ring styling without changing values."""
         self._ensure_ring(r, c, fg_out, fg_in, bg, size_px, w_out, w_in)
     
     def set_ring_value(self, r: int, c: int, outer: int, inner: int) -> None:
-        """Set ring values."""
         if not (0 <= r < self.rows) or not (0 <= c < self.cols_per_row[r]):
             return
         
@@ -1106,7 +990,6 @@ class PatchDisplayScreen(tk.Frame):
             ring.set_values(outer, inner)
     
     def set_ring_text(self, r: int, c: int, text: Optional[str]) -> None:
-        """Set ring center text override."""
         if not (0 <= r < self.rows) or not (0 <= c < self.cols_per_row[r]):
             return
         
@@ -1121,12 +1004,10 @@ class PatchDisplayScreen(tk.Frame):
     def set_ring_all(self, r: int, c: int, outer: int, inner: int,
                     fg_out: str, fg_in: str, bg: str, 
                     size_px: int, w_out: int, w_in: int) -> None:
-        """Set ring style and values together."""
         self._ensure_ring(r, c, fg_out, fg_in, bg, size_px, w_out, w_in)
         self.set_ring_value(r, c, outer, inner)
     
     def set_ring_extra_arcs(self, r: int, c: int, val1: int, val2: int) -> None:
-        """Set the extra arc values."""
         if not (0 <= r < self.rows) or not (0 <= c < self.cols_per_row[r]):
             return
         
@@ -1138,11 +1019,8 @@ class PatchDisplayScreen(tk.Frame):
         if ring:
             ring.set_extra_arcs(val1, val2)
     
-    # ---- Text Cell Methods ----
-    
     @staticmethod
     def _map_anchor(align: Optional[str]) -> str:
-        """Map alignment string to Tkinter anchor."""
         if not align:
             return "w"
         
@@ -1158,7 +1036,6 @@ class PatchDisplayScreen(tk.Frame):
     def set_cell(self, r: int, c: int, text: Optional[str] = None,
                 fg: Optional[str] = None, bg: Optional[str] = None,
                 align: Optional[str] = None) -> None:
-        """Set text cell properties."""
         if not (0 <= r < self.rows) or not (0 <= c < self.cols_per_row[r]):
             return
         
@@ -1215,11 +1092,8 @@ class PatchDisplayScreen(tk.Frame):
                 except tk.TclError:
                     pass
     
-    # ---- Screen System Methods ----
-    
     def go_home(self):
         """HOME button pressed - return to control panel"""
-        # Pure Data keeps running!
         self.app.show_screen('control')
     
     def on_show(self):
