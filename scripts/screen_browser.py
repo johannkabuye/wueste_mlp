@@ -1,5 +1,5 @@
 """
-Browser Screen - Grid-based layout matching patch display
+Browser Screen - Page-based navigation
 """
 import tkinter as tk
 import os
@@ -8,9 +8,10 @@ import os
 DEFAULT_ROWS = 11
 COLS_PER_ROW = [4, 4, 4, 8, 4, 4, 4, 8, 4, 8, 8]
 ROW_HEIGHTS = [60, 210, 50, 0, 0, 210, 50, 5, 20, 50, 50]
+PATCHES_PER_PAGE = 8
 
 class BrowserScreen(tk.Frame):
-    """Project browser using grid layout"""
+    """Project browser with page-based navigation"""
     
     def __init__(self, parent, app):
         super().__init__(parent, bg="#000000")
@@ -21,11 +22,17 @@ class BrowserScreen(tk.Frame):
         
         # State
         self.projects = []
-        self.selected_index = 0
+        self.current_page = 0
+        self.total_pages = 0
+        self.selected_project_index = None  # None = nothing selected
         
         # UI references
         self.cell_frames = []
-        self.project_labels = []  # Labels for projects in rows 1 and 5
+        self.project_labels = []
+        self.page_label = None
+        self.load_button = None
+        self.prev_button = None
+        self.next_button = None
         
         self._build_ui()
         
@@ -82,6 +89,17 @@ class BrowserScreen(tk.Frame):
                     menu_btn.bind("<Button-1>", lambda e: self.go_home())
                     menu_btn.pack(fill="both", expand=True)
                 
+                # Row 0, Cell 3: Page indicator (e.g., "1/8")
+                elif r == 0 and c == 3:
+                    self.page_label = tk.Label(
+                        cell,
+                        text="1/1",
+                        bg="black", fg="#606060",
+                        anchor="e", padx=10, pady=0, bd=0, highlightthickness=0,
+                        font=self.app.fonts.small
+                    )
+                    self.page_label.pack(fill="both", expand=True)
+                
                 # Row 1: Project cells 0-3 (big font)
                 elif r == 1:
                     proj_label = tk.Label(
@@ -111,52 +129,50 @@ class BrowserScreen(tk.Frame):
                 # Row 9: Navigation buttons
                 elif r == 9:
                     if c == 0:
-                        # UP button
-                        btn = self._create_nav_button(cell, "▲ UP", lambda: self.move_selection(-1))
-                        btn.pack(fill="both", expand=True)
+                        # PREVIOUS PAGE button
+                        self.prev_button = tk.Label(
+                            cell, text="◀ PREV",
+                            font=self.app.fonts.small,
+                            bg="#000000", fg="#ffffff",
+                            cursor="hand2", bd=0, relief="flat"
+                        )
+                        self.prev_button.bind("<Button-1>", lambda e: self.prev_page())
+                        self.prev_button.pack(fill="both", expand=True)
                     elif c == 1:
-                        # DOWN button  
-                        btn = self._create_nav_button(cell, "▼ DOWN", lambda: self.move_selection(1))
-                        btn.pack(fill="both", expand=True)
+                        # NEXT PAGE button
+                        self.next_button = tk.Label(
+                            cell, text="NEXT ▶",
+                            font=self.app.fonts.small,
+                            bg="#000000", fg="#ffffff",
+                            cursor="hand2", bd=0, relief="flat"
+                        )
+                        self.next_button.bind("<Button-1>", lambda e: self.next_page())
+                        self.next_button.pack(fill="both", expand=True)
                     elif c == 7:
                         # LOAD button (last column)
-                        btn = self._create_nav_button(cell, "▶ LOAD", self.load_selected_project)
-                        btn.pack(fill="both", expand=True)
-                
-                # Row 10: Page navigation buttons
-                elif r == 10:
-                    if c == 0:
-                        # PAGE UP button
-                        btn = self._create_nav_button(cell, "⇈ PAGE UP", lambda: self.move_selection(-8))
-                        btn.pack(fill="both", expand=True)
-                    elif c == 1:
-                        # PAGE DOWN button
-                        btn = self._create_nav_button(cell, "⇊ PAGE DOWN", lambda: self.move_selection(8))
-                        btn.pack(fill="both", expand=True)
+                        self.load_button = tk.Label(
+                            cell, text="▶ LOAD",
+                            font=self.app.fonts.small,
+                            bg="#000000", fg="#303030",  # Start dark grey (disabled)
+                            cursor="hand2", bd=0, relief="flat"
+                        )
+                        self.load_button.bind("<Button-1>", lambda e: self.load_selected_project())
+                        self.load_button.pack(fill="both", expand=True)
             
             self.cell_frames.append(row_cells)
-    
-    def _create_nav_button(self, parent, text, command):
-        """Create navigation button"""
-        btn = tk.Label(
-            parent, text=text,
-            font=self.app.fonts.small,  # Use small font (27pt)
-            bg="#000000", fg="#ffffff",
-            cursor="hand2", bd=0, relief="flat"
-        )
-        btn.bind("<Button-1>", lambda e: command())
-        return btn
     
     def refresh_projects(self):
         """Scan projects directory for project folders"""
         self.projects = []
+        self.selected_project_index = None
         
         projects_dir = os.path.join(self.app.molipe_root, "projects")
         
         # Check if projects directory exists
         if not os.path.exists(projects_dir):
-            self.projects = [{'name': '(no projects)', 'path': None}]
-            self.selected_index = 0
+            self.projects = []
+            self.current_page = 0
+            self.total_pages = 0
             self.update_display()
             return
         
@@ -184,111 +200,110 @@ class BrowserScreen(tk.Frame):
         except Exception as e:
             print(f"Error scanning projects: {e}")
         
-        if not self.projects:
-            self.projects = [{'name': '(no projects)', 'path': None}]
+        # Calculate total pages
+        if self.projects:
+            self.total_pages = (len(self.projects) + PATCHES_PER_PAGE - 1) // PATCHES_PER_PAGE
+        else:
+            self.total_pages = 1
         
-        self.selected_index = 0
+        # Reset to first page
+        self.current_page = 0
+        
         self.update_display()
     
     def update_display(self):
-        """Update the project display in grid cells"""
-        # Show 8 projects at once (4 in row 1, 4 in row 5)
-        total_projects = len(self.projects)
+        """Update the project display for current page"""
+        # Calculate start/end indices for current page
+        start_idx = self.current_page * PATCHES_PER_PAGE
+        end_idx = start_idx + PATCHES_PER_PAGE
         
-        if total_projects == 0:
-            # No projects - clear all labels
-            for label in self.project_labels:
-                label.config(text="", fg="#606060", bg="black")
-            return
+        # Update page label
+        if self.page_label:
+            page_display = f"{self.current_page + 1}/{self.total_pages}"
+            self.page_label.config(text=page_display)
         
-        # Calculate visible window - keep selection in middle when possible
-        if total_projects <= 8:
-            # Show all projects if 8 or fewer
-            start_idx = 0
-        else:
-            # Try to center selection in the 8-item window
-            # Selection should ideally be at position 3 or 4 in the display
-            start_idx = self.selected_index - 3
-            
-            # Don't go below 0
-            if start_idx < 0:
-                start_idx = 0
-            
-            # Don't go past the end
-            if start_idx + 8 > total_projects:
-                start_idx = total_projects - 8
-        
-        # Update all 8 project labels
-        for i in range(8):
+        # Update project labels
+        for i in range(PATCHES_PER_PAGE):
             project_idx = start_idx + i
             
-            if project_idx < total_projects:
+            if project_idx < len(self.projects):
                 project = self.projects[project_idx]
                 project_name = project['name']
                 
-                # Highlight selected
-                if project_idx == self.selected_index:
+                # Highlight if selected
+                if self.selected_project_index == project_idx:
                     self.project_labels[i].config(text=project_name, fg="#ffffff", bg="#303030")
                 else:
                     self.project_labels[i].config(text=project_name, fg="#909090", bg="black")
             else:
                 # Empty cell
                 self.project_labels[i].config(text="", fg="#606060", bg="black")
+        
+        # Update LOAD button appearance
+        self.update_load_button()
+        
+        # Update navigation button states
+        self.update_nav_buttons()
+    
+    def update_load_button(self):
+        """Update LOAD button color based on selection"""
+        if self.load_button:
+            if self.selected_project_index is not None:
+                # Something selected - white text (enabled)
+                self.load_button.config(fg="#ffffff")
+            else:
+                # Nothing selected - dark grey text (disabled)
+                self.load_button.config(fg="#303030")
+    
+    def update_nav_buttons(self):
+        """Update PREV/NEXT button states"""
+        if self.prev_button:
+            if self.current_page > 0:
+                self.prev_button.config(fg="#ffffff")  # Enabled
+            else:
+                self.prev_button.config(fg="#303030")  # Disabled (first page)
+        
+        if self.next_button:
+            if self.current_page < self.total_pages - 1:
+                self.next_button.config(fg="#ffffff")  # Enabled
+            else:
+                self.next_button.config(fg="#303030")  # Disabled (last page)
     
     def select_project(self, display_idx):
-        """Select a project by clicking on it (display_idx is 0-7)"""
-        total_projects = len(self.projects)
-        
-        if total_projects == 0:
-            return
-        
-        # Calculate start of visible window (same logic as update_display)
-        if total_projects <= 8:
-            start_idx = 0
-        else:
-            start_idx = self.selected_index - 3
-            if start_idx < 0:
-                start_idx = 0
-            if start_idx + 8 > total_projects:
-                start_idx = total_projects - 8
-        
-        # Calculate actual project index
+        """Select a project by clicking on it (display_idx is 0-7 on current page)"""
+        start_idx = self.current_page * PATCHES_PER_PAGE
         project_idx = start_idx + display_idx
         
         # Only select if it's a valid project
-        if 0 <= project_idx < total_projects:
-            self.selected_index = project_idx
+        if project_idx < len(self.projects):
+            self.selected_project_index = project_idx
             self.update_display()
     
-    def move_selection(self, direction):
-        """Move selection by direction amount (1 = down, -1 = up, 8 = page down, -8 = page up)"""
-        if not self.projects:
-            return
-        
-        # Don't navigate if only placeholder message
-        if self.projects[0]['path'] is None and len(self.projects) == 1:
-            return
-        
-        total_projects = len(self.projects)
-        
-        # Calculate new index
-        new_index = self.selected_index + direction
-        
-        # Wrap around at boundaries
-        if new_index < 0:
-            new_index = total_projects - 1
-        elif new_index >= total_projects:
-            new_index = 0
-        
-        self.selected_index = new_index
-        self.update_display()
+    def prev_page(self):
+        """Go to previous page"""
+        if self.current_page > 0:
+            self.current_page -= 1
+            self.selected_project_index = None  # Clear selection on page change
+            self.update_display()
+    
+    def next_page(self):
+        """Go to next page"""
+        if self.current_page < self.total_pages - 1:
+            self.current_page += 1
+            self.selected_project_index = None  # Clear selection on page change
+            self.update_display()
     
     def load_selected_project(self):
         """Load the selected project"""
+        # Only load if something is selected
+        if self.selected_project_index is None:
+            print("No project selected")
+            return
+        
         if not self.projects:
             return
         
-        selected_project = self.projects[self.selected_index]
+        selected_project = self.projects[self.selected_project_index]
         main_pd_path = selected_project['path']
         
         if main_pd_path is None:

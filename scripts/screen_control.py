@@ -229,7 +229,7 @@ class ControlScreen(tk.Frame):
         thread.start()
     
     def update_molipe(self):
-        """Update molipe from git"""
+        """Update molipe from git and restart"""
         if self.updating:
             return
         
@@ -247,12 +247,27 @@ class ControlScreen(tk.Frame):
                 )
                 
                 if result.returncode == 0:
-                    self.after(0, lambda: self.update_status("UPDATE COMPLETE"))
+                    # Check if anything was actually updated
+                    if "Already up to date" in result.stdout:
+                        self.after(0, lambda: self.update_status("ALREADY UP TO DATE"))
+                        self.updating = False
+                    else:
+                        # Files were updated - restart the app!
+                        self.after(0, lambda: self.update_status("RESTARTING..."))
+                        import time
+                        time.sleep(1)
+                        
+                        # Restart Python process
+                        import sys
+                        import os
+                        print("UPDATE COMPLETE - RESTARTING APP...")
+                        python = sys.executable
+                        os.execv(python, [python] + sys.argv)
                 else:
                     self.after(0, lambda: self.update_status("UPDATE FAILED", error=True))
+                    self.updating = False
             except Exception as e:
                 self.after(0, lambda: self.update_status(f"ERROR: {str(e)}", error=True))
-            finally:
                 self.updating = False
         
         threading.Thread(target=do_update, daemon=True).start()
