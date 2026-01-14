@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Patch Display Screen - UDP-controlled GUI integrated with molipe navigation
-Full integration of molipe_gui.py with screen system
+MENU button integrated in grid at cell (0,0) - no z-order issues
 """
 import os
 import sys
@@ -504,9 +504,8 @@ class DualRing(tk.Frame):
         except tk.TclError:
             pass
 
-
 class PatchDisplayScreen(tk.Frame):
-    """Patch display screen with UDP control and HOME button"""
+    """Patch display screen with UDP control and MENU button in grid"""
     
     def __init__(self, parent, app):
         super().__init__(parent, bg="#000000")
@@ -594,26 +593,7 @@ class PatchDisplayScreen(tk.Frame):
         self.last_anchor = [[None] * self.cols_per_row[r] for r in range(self.rows)]
     
     def _build_ui(self):
-        """Build the patch display UI with HOME button"""
-        
-        # HOME button in upper left corner
-        self.home_button = tk.Label(
-            self, text="⌂",
-            font=("Sunflower", 30, "bold"),
-            bg="#000000", fg="#606060",
-            cursor="none",
-            padx=15, pady=10
-        )
-        self.home_button.place(relx=0.02, rely=0.02, anchor="nw")
-        self.home_button.bind("<Button-1>", lambda e: self.go_home())
-        
-        # Status in upper right
-        self.status = tk.Label(
-            self, text="PATCH DISPLAY",
-            font=self.app.fonts.status,
-            bg="#000000", fg="#606060"
-        )
-        self.status.place(relx=0.98, rely=0.02, anchor="ne")
+        """Build the patch display UI with MENU button in cell (0,0)"""
         
         # Main grid container
         self.container = tk.Frame(self, bg="black", bd=0, highlightthickness=0)
@@ -656,24 +636,38 @@ class PatchDisplayScreen(tk.Frame):
                 var = tk.StringVar(value="")
                 row_vars.append(var)
                 
-                if r == 0:
-                    fnt = self.head_font
-                elif r in BIG_FONT_ROWS:
-                    fnt = self.big_font
+                # SPECIAL: First cell (0,0) is MENU button
+                if r == 0 and c == 0:
+                    lbl = tk.Label(
+                        cell,
+                        text="////<MENU",
+                        bg="black", fg="white",  # Black background, white text
+                        anchor="w", padx=10, pady=0, bd=0, highlightthickness=0,
+                        font=self.head_font,
+                        cursor="hand2"
+                    )
+                    lbl.bind("<Button-1>", lambda e: self.go_home())
                 else:
-                    fnt = self.small_font
+                    # Normal cell
+                    if r == 0:
+                        fnt = self.head_font
+                    elif r in BIG_FONT_ROWS:
+                        fnt = self.big_font
+                    else:
+                        fnt = self.small_font
+                    
+                    if r in {2, 6}:
+                        anchor = "n"
+                    else:
+                        anchor = "w"
+                    
+                    lbl = tk.Label(
+                        cell, textvariable=var,
+                        bg="black", fg="white",
+                        anchor=anchor, padx=0, pady=0, bd=0, highlightthickness=0
+                    )
+                    lbl.configure(font=fnt)
                 
-                if r in {2, 6}:
-                    anchor = "n"
-                else:
-                    anchor = "w"
-                
-                lbl = tk.Label(
-                    cell, textvariable=var,
-                    bg="black", fg="white",
-                    anchor=anchor, padx=0, pady=0, bd=0, highlightthickness=0
-                )
-                lbl.configure(font=fnt)
                 lbl.pack(fill="both", expand=True)
                 row_labels.append(lbl)
             
@@ -906,7 +900,9 @@ class PatchDisplayScreen(tk.Frame):
             if key[0] == "SET":
                 _, r, c = key
                 text, fg, bg, align = payload
-                self.set_cell(r, c, text, fg, bg, align)
+                # Skip cell (0,0) - that's the MENU button
+                if not (r == 0 and c == 0):
+                    self.set_cell(r, c, text, fg, bg, align)
                 del self.pending_latest[key]
                 applied += 1
         
@@ -951,6 +947,10 @@ class PatchDisplayScreen(tk.Frame):
         if not (0 <= r < self.rows) or not (0 <= c < self.cols_per_row[r]):
             return
         
+        # Don't replace MENU button
+        if r == 0 and c == 0:
+            return
+        
         lbl = self.labels[r][c]
         if lbl.winfo_manager():
             lbl.forget()
@@ -981,6 +981,9 @@ class PatchDisplayScreen(tk.Frame):
         if not (0 <= r < self.rows) or not (0 <= c < self.cols_per_row[r]):
             return
         
+        if r == 0 and c == 0:
+            return
+        
         ring = self.rings[r][c]
         if ring is None:
             self._ensure_ring(r, c, "#606060", "#ffffff", "#000000", 280, RING_OUTER_ARC_WIDTH, RING_INNER_ARC_WIDTH)
@@ -991,6 +994,9 @@ class PatchDisplayScreen(tk.Frame):
     
     def set_ring_text(self, r: int, c: int, text: Optional[str]) -> None:
         if not (0 <= r < self.rows) or not (0 <= c < self.cols_per_row[r]):
+            return
+        
+        if r == 0 and c == 0:
             return
         
         ring = self.rings[r][c]
@@ -1009,6 +1015,9 @@ class PatchDisplayScreen(tk.Frame):
     
     def set_ring_extra_arcs(self, r: int, c: int, val1: int, val2: int) -> None:
         if not (0 <= r < self.rows) or not (0 <= c < self.cols_per_row[r]):
+            return
+        
+        if r == 0 and c == 0:
             return
         
         ring = self.rings[r][c]
@@ -1037,6 +1046,10 @@ class PatchDisplayScreen(tk.Frame):
                 fg: Optional[str] = None, bg: Optional[str] = None,
                 align: Optional[str] = None) -> None:
         if not (0 <= r < self.rows) or not (0 <= c < self.cols_per_row[r]):
+            return
+        
+        # Don't modify MENU button
+        if r == 0 and c == 0:
             return
         
         if text is not None and text != "":
@@ -1093,18 +1106,18 @@ class PatchDisplayScreen(tk.Frame):
                     pass
     
     def go_home(self):
-        """HOME button pressed - return to control panel"""
+        """MENU button pressed - return to control panel"""
+        print("MENU clicked - returning to control panel")
         self.app.show_screen('control')
     
     def on_show(self):
         """Called when this screen becomes visible"""
         if self.app.pd_manager.is_running():
             patch_name = os.path.basename(self.app.pd_manager.current_patch or "")
-            self.status.config(text=f"PLAYING: {patch_name}")
+            print(f"Patch display shown - PD running: {patch_name}")
         else:
-            self.status.config(text="NO PATCH LOADED")
+            print("Patch display shown - PD NOT running")
     
     def update_status(self, message, error=False):
-        """Update status label"""
-        color = "#e74c3c" if error else "#606060"
-        self.status.config(text=message.upper(), fg=color)
+        """Update status (for compatibility)"""
+        print(f"Status: {message}")

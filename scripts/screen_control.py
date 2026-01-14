@@ -1,5 +1,5 @@
 """
-Control Panel Screen - Hub for Projects, Updates, and System
+Control Panel Screen - Grid-based layout matching patch display
 """
 import tkinter as tk
 import socket
@@ -7,21 +7,29 @@ import subprocess
 import threading
 import os
 
+# Grid configuration (same as patch display)
+DEFAULT_ROWS = 11
+COLS_PER_ROW = [4, 4, 4, 8, 4, 4, 4, 8, 4, 8, 8]
+ROW_HEIGHTS = [60, 210, 50, 0, 0, 210, 50, 5, 20, 50, 50]
+BIG_FONT_PT = 29
+
 class ControlScreen(tk.Frame):
-    """Main control panel / home screen"""
+    """Main control panel using grid layout"""
     
     def __init__(self, parent, app):
         super().__init__(parent, bg="#000000")
         self.app = app
         self.updating = False
         
+        self.rows = DEFAULT_ROWS
+        self.cols_per_row = list(COLS_PER_ROW)
+        
         # Internet connectivity
         self.has_internet = self.check_internet()
         
         # UI references
-        self.update_button = None
-        self.no_internet_label = None
-        self.projects_button = None
+        self.patch_button = None
+        self.cell_frames = []
         
         self._build_ui()
         
@@ -29,218 +37,221 @@ class ControlScreen(tk.Frame):
         self.check_connectivity_periodically()
     
     def _build_ui(self):
-        """Build the control panel UI"""
-        # Status label in upper right
-        status_text = "READY" if self.has_internet else "OFFLINE MODE"
-        self.status = tk.Label(
-            self, text=status_text,
-            font=self.app.fonts.status,
-            bg="#000000", fg="#606060"
-        )
-        self.status.place(relx=0.98, rely=0.02, anchor="ne")
+        """Build grid-based control panel"""
         
-        # Main container
-        container = tk.Frame(self, bg="#000000")
-        container.place(relx=0.5, rely=0.5, anchor="center")
+        # Main grid container
+        container = tk.Frame(self, bg="black", bd=0, highlightthickness=0)
+        container.pack(expand=True, fill="both")
         
-        # Title
-        title = tk.Label(
-            container, text="MOLIPE",
-            font=self.app.fonts.title,
-            bg="#000000", fg="#ffffff"
-        )
-        title.grid(row=0, column=0, columnspan=3, pady=(0, 60))
+        container.columnconfigure(0, weight=1, uniform="outer_col")
         
-        # Configure grid
-        for i in range(3):
-            container.columnconfigure(i, weight=1, uniform="button_col")
+        self.cell_frames.clear()
         
-        # Row 1: PROJECTS, RESUME (if PD running), UPDATE/SHUTDOWN
-        
-        # PROJECTS button (always goes to browser)
-        self.projects_button = self._create_button(
-            container, "▶ PROJECTS", self.on_projects_clicked
-        )
-        self.projects_button.grid(row=1, column=0, padx=10, pady=10, sticky="nsew")
-        
-        # RESUME button (only visible when PD is running)
-        self.resume_button = self._create_button(
-            container, "▶ RESUME", self.on_resume_clicked
-        )
-        if self.app.pd_manager.is_running():
-            self.resume_button.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
-        else:
-            self.resume_button.grid_forget()
-        
-        # UPDATE button (if internet available) or SHUTDOWN
-        if self.has_internet:
-            self.update_button = self._create_button(
-                container, "↻ UPDATE", self.update_molipe
-            )
-            self.update_button.grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
-        else:
-            self._create_button(
-                container, "⏻ SHUTDOWN", self.shutdown
-            ).grid(row=1, column=2, padx=10, pady=10, sticky="nsew")
-        
-        # Row 2: QUIT and SHUTDOWN (if UPDATE was shown)
-        if self.has_internet:
-            self._create_button(
-                container, "⏻ SHUTDOWN", self.shutdown
-            ).grid(row=2, column=0, padx=10, pady=10, sticky="nsew")
-        
-        # QUIT button (closes GUI, keeps PD running)
-        self._create_button(
-            container, "✕ QUIT GUI", self.quit_gui
-        ).grid(row=2, column=1 if self.has_internet else 0, columnspan=2 if not self.has_internet else 1, padx=10, pady=10, sticky="nsew")
+        # Build 11-row grid
+        for r in range(self.rows):
+            fixed_h = ROW_HEIGHTS[r] if r < len(ROW_HEIGHTS) else 0
+            container.rowconfigure(r, minsize=fixed_h, weight=0)
+            
+            row_frame = tk.Frame(container, bg="black", bd=0, highlightthickness=0)
+            row_frame.grid(row=r, column=0, sticky="nsew", padx=0, pady=0)
+            row_frame.grid_propagate(False)
+            
+            if fixed_h:
+                row_frame.configure(height=fixed_h)
+            
+            cols = self.cols_per_row[r]
+            for c in range(cols):
+                row_frame.columnconfigure(c, weight=1, uniform=f"row{r}_col")
+            row_frame.rowconfigure(0, weight=1)
+            
+            row_cells = []
+            
+            for c in range(cols):
+                cell = tk.Frame(row_frame, bg="black", bd=0, highlightthickness=0)
+                cell.grid(row=0, column=c, sticky="nsew", padx=0, pady=0)
+                cell.grid_propagate(False)
+                row_cells.append(cell)
+                
+                # Row 0, Cell 0: PATCH button (only when PD running)
+                if r == 0 and c == 0:
+                    self.patch_button = tk.Label(
+                        cell,
+                        text="////PATCH",
+                        bg="black", fg="white",
+                        anchor="w", padx=10, pady=0, bd=0, highlightthickness=0,
+                        font=self.app.fonts.small,  # Use small font (27pt) to match ////<MENU
+                        cursor="hand2"
+                    )
+                    self.patch_button.bind("<Button-1>", lambda e: self.on_patch_clicked())
+                    # Initially hidden
+                    if not self.app.pd_manager.is_running():
+                        self.patch_button.pack_forget()
+                    else:
+                        self.patch_button.pack(fill="both", expand=True)
+                
+                # Row 1 (big font row): Main buttons
+                elif r == 1:
+                    if c == 0:
+                        # PROJECTS button
+                        btn = self._create_big_button(cell, "▶ PROJECTS", self.on_projects_clicked)
+                        btn.pack(fill="both", expand=True)
+                    elif c == 1:
+                        # UPDATE button (or OFFLINE)
+                        if self.has_internet:
+                            btn = self._create_big_button(cell, "↻ UPDATE", self.update_molipe)
+                            btn.pack(fill="both", expand=True)
+                        else:
+                            lbl = tk.Label(
+                                cell, text="OFFLINE",
+                                font=self.app.fonts.big,  # Use BIG font (29pt)
+                                bg="#000000", fg="#303030",
+                                bd=0, relief="flat"
+                            )
+                            lbl.pack(fill="both", expand=True)
+                    elif c == 3:
+                        # SHUTDOWN button (moved to 4th column)
+                        btn = self._create_big_button(cell, "⏻ SHUTDOWN", self.shutdown)
+                        btn.pack(fill="both", expand=True)
+                
+                # Row 5 (big font row): SAVE buttons
+                elif r == 5:
+                    if c == 0:
+                        # SAVE button (placeholder)
+                        btn = self._create_big_button(cell, "💾 SAVE", self.save_placeholder)
+                        btn.pack(fill="both", expand=True)
+                    elif c == 1:
+                        # SAVE AS button (placeholder)
+                        btn = self._create_big_button(cell, "💾 SAVE AS", self.save_as_placeholder)
+                        btn.pack(fill="both", expand=True)
+            
+            self.cell_frames.append(row_cells)
     
-    def _create_button(self, parent, text, command):
-        """Create a custom button using Label"""
+    def _create_big_button(self, parent, text, command):
+        """Create a big button for rows 1 and 5 using BIG font (29pt)"""
         btn = tk.Label(
             parent, text=text,
-            font=self.app.fonts.button,
+            font=self.app.fonts.big,  # Use BIG font (29pt) - same as patch display
             bg="#000000", fg="#ffffff",
-            cursor="none", bd=0, relief="flat",
-            padx=20, pady=20
+            cursor="hand2", bd=0, relief="flat", padx=20, pady=20
         )
         btn.bind("<Button-1>", lambda e: command())
         return btn
+    
+    def refresh_button_state(self):
+        """Update PATCH button visibility based on PD state"""
+        if self.patch_button:
+            if self.app.pd_manager.is_running():
+                # Show PATCH button
+                self.patch_button.pack(fill="both", expand=True)
+            else:
+                # Hide PATCH button
+                self.patch_button.pack_forget()
     
     def on_projects_clicked(self):
         """Handle PROJECTS button click - always go to browser"""
         self.app.show_screen('browser')
     
-    def on_resume_clicked(self):
-        """Handle RESUME button click - go back to patch display"""
+    def on_patch_clicked(self):
+        """Handle PATCH button click - go back to patch display"""
         if self.app.pd_manager.is_running():
             self.app.show_screen('patch')
     
-    def quit_gui(self):
-        """Quit GUI but leave Pure Data running"""
-        self.update_status("CLOSING GUI...")
-        # Do NOT call pd_manager.cleanup() - let PD keep running
-        self.after(500, lambda: self.app.root.destroy())
+    def save_placeholder(self):
+        """SAVE button - placeholder for future functionality"""
+        print("SAVE clicked (placeholder)")
+        self.update_status("SAVE - NOT IMPLEMENTED YET")
     
-    def refresh_button_state(self):
-        """Update RESUME button visibility based on PD state"""
+    def save_as_placeholder(self):
+        """SAVE AS button - placeholder for future functionality"""
+        print("SAVE AS clicked (placeholder)")
+        self.update_status("SAVE AS - NOT IMPLEMENTED YET")
+    
+    def on_show(self):
+        """Called when this screen becomes visible"""
+        # Update PATCH button visibility
+        self.refresh_button_state()
+        
+        # Update status
         if self.app.pd_manager.is_running():
-            # Show RESUME button
-            self.resume_button.grid(row=1, column=1, padx=10, pady=10, sticky="nsew")
+            self.update_status("READY")
         else:
-            # Hide RESUME button
-            self.resume_button.grid_forget()
+            if self.has_internet:
+                self.update_status("READY")
+            else:
+                self.update_status("OFFLINE MODE")
     
-    def check_internet(self, host="8.8.8.8", port=53, timeout=3):
+    def update_status(self, message, error=False):
+        """Update status message"""
+        # Could add a status cell if needed, for now just print
+        print(f"Control Panel: {message}")
+    
+    def check_internet(self):
         """Check if internet connection is available"""
         try:
-            socket.setdefaulttimeout(timeout)
-            socket.socket(socket.AF_INET, socket.SOCK_STREAM).connect((host, port))
+            socket.create_connection(("8.8.8.8", 53), timeout=2)
             return True
-        except socket.error:
+        except OSError:
             return False
     
     def check_connectivity_periodically(self):
-        """Periodically check internet connectivity"""
-        old_status = self.has_internet
-        self.has_internet = self.check_internet()
+        """Check internet connectivity every 10 seconds"""
+        def check():
+            while True:
+                import time
+                time.sleep(10)
+                has_internet = self.check_internet()
+                if has_internet != self.has_internet:
+                    self.has_internet = has_internet
+                    # Could update UI here if needed
         
-        if old_status != self.has_internet:
-            self._update_connectivity_ui()
-        
-        # Schedule next check
-        self.after(10000, self.check_connectivity_periodically)
-    
-    def _update_connectivity_ui(self):
-        """Update UI based on connectivity change"""
-        # This is a simplified version - could be expanded
-        status_text = "ONLINE" if self.has_internet else "OFFLINE MODE"
-        if not self.updating:
-            self.update_status(status_text)
+        thread = threading.Thread(target=check, daemon=True)
+        thread.start()
     
     def update_molipe(self):
-        """Update molipe core from GitHub"""
-        if self.updating or not self.has_internet:
-            return
-        
-        repo_path = self.app.molipe_root
-        
-        if not os.path.exists(os.path.join(repo_path, ".git")):
-            self.update_status("NOT A GIT REPO", error=True)
+        """Update molipe from git"""
+        if self.updating:
             return
         
         self.updating = True
-        if self.update_button:
-            self.update_button.config(fg="#606060")
-        
-        self.update_status("FETCHING...")
+        self.update_status("UPDATING...")
         
         def do_update():
             try:
-                # Fetch latest
-                fetch_result = subprocess.run(
-                    ['git', 'fetch', 'origin', 'main'],
-                    cwd=repo_path,
-                    capture_output=True, text=True, timeout=30
+                result = subprocess.run(
+                    ["git", "pull", "--force"],
+                    cwd=self.app.molipe_root,
+                    capture_output=True,
+                    text=True,
+                    timeout=30
                 )
                 
-                if fetch_result.returncode != 0:
-                    self.after(0, lambda: self.update_status("✗ FETCH FAILED", error=True))
-                    self.after(0, self._finish_update)
-                    return
-                
-                self.after(0, lambda: self.update_status("UPDATING..."))
-                
-                # Force reset
-                reset_result = subprocess.run(
-                    ['git', 'reset', '--hard', 'origin/main'],
-                    cwd=repo_path,
-                    capture_output=True, text=True, timeout=10
-                )
-                
-                if reset_result.returncode == 0:
-                    # Fix permissions
-                    scripts_dir = os.path.join(repo_path, "scripts")
-                    if os.path.exists(scripts_dir):
-                        for f in os.listdir(scripts_dir):
-                            if f.endswith('.py'):
-                                os.chmod(os.path.join(scripts_dir, f), 0o755)
-                    
-                    self.after(0, lambda: self.update_status("✓ UPDATED"))
-                    
-                    # Restart PD if it was running
-                    if self.app.pd_manager.is_running():
-                        self.after(2000, self.app.pd_manager.restart_pd)
+                if result.returncode == 0:
+                    self.after(0, lambda: self.update_status("UPDATE COMPLETE"))
                 else:
-                    self.after(0, lambda: self.update_status("✗ RESET FAILED", error=True))
-            
-            except subprocess.TimeoutExpired:
-                self.after(0, lambda: self.update_status("✗ TIMEOUT", error=True))
+                    self.after(0, lambda: self.update_status("UPDATE FAILED", error=True))
             except Exception as e:
-                self.after(0, lambda: self.update_status("✗ ERROR", error=True))
-            
-            self.after(0, self._finish_update)
+                self.after(0, lambda: self.update_status(f"ERROR: {str(e)}", error=True))
+            finally:
+                self.updating = False
         
         threading.Thread(target=do_update, daemon=True).start()
-    
-    def _finish_update(self):
-        """Re-enable button after update"""
-        self.updating = False
-        if self.update_button:
-            self.update_button.config(fg="#ffffff")
     
     def shutdown(self):
         """Shutdown the system"""
         self.update_status("SHUTTING DOWN...")
-        self.app.cleanup()
-        self.after(500, lambda: subprocess.run(['sudo', 'shutdown', '-h', 'now']))
-    
-    def update_status(self, message, error=False):
-        """Update status label"""
-        color = "#e74c3c" if error else "#606060"
-        self.status.config(text=message.upper(), fg=color)
-        # No need to force update - will happen naturally
-    
-    def on_show(self):
-        """Called when this screen becomes visible"""
-        # Refresh button state when returning to control panel
-        self.refresh_button_state()
+        
+        def do_shutdown():
+            import time
+            time.sleep(1)
+            
+            # Clean up Pure Data
+            self.app.pd_manager.cleanup()
+            
+            # Shutdown system
+            try:
+                if self.app.platform == "linux":
+                    subprocess.run(["sudo", "shutdown", "now"], check=False)
+            except Exception as e:
+                print(f"Shutdown error: {e}")
+        
+        threading.Thread(target=do_shutdown, daemon=True).start()
