@@ -9,7 +9,7 @@
 #X obj 1124 134 loadbang;
 #X obj 938 100 t b b;
 #X obj 105 116 bng 10 50 50 0 \$0-clock-in-s \$0-clock-in-r empty 17 7 0 10 #fcfcfc #dc4c90 #000000;
-#X obj 220 128 cnv 5 5 5 empty \$0-instance-num 5 0 0 0 12 #fcfcfc #404040 0;
+#X obj 220 128 cnv 5 5 5 empty \$0-instance-num 3 0 0 0 12 #fcfcfc #404040 0;
 #X obj 134 137 hradio 15 1 0 8 empty \$0-count-seq empty 0 -10 0 12 #fcfcfc #ce2413 #000000 0;
 #X obj 134 159 vsl 15 30 0 127 0 0 \$0-step-edit0 \$0-r-step-edit0 empty 0 -9 0 10 #dfdfdf #000000 #000000 0 1;
 #X obj 149 159 vsl 15 30 0 127 0 0 \$0-step-edit1 \$0-r-step-edit1 empty 0 -9 0 10 #fcfcfc #000000 #000000 0 1;
@@ -470,7 +470,7 @@
 #X obj 151 248 cnv 5 5 5 empty empty 17-32 0 0 0 8 #fcfcfc #000000 0;
 #X obj 191 247 cnv 5 5 5 empty empty 49-64 0 0 0 8 #fcfcfc #000000 0;
 #X obj 938 137 s \$0-clock-in;
-#X obj 1115 477 r \$0-clock-in;
+#X obj 1114 449 r \$0-clock-in;
 #X obj 254 254 tgl 15 0 \$0-stutter-on-off \$0-stutter-on-off-r empty 0 -8 0 10 #fcfcfc #000000 #000000 0 1;
 #X obj 194 254 hradio 15 1 0 4 \$0-diet-drum-seq-stutter-length-s \$0-diet-drum-seq-stutter-length-r empty 0 -8 0 10 #ff5368 #000000 #000000 0;
 #X obj 104 581 s \$0-stutter-length;
@@ -1880,7 +1880,7 @@
 #X obj 124 148 r patch-path;
 #X msg 36 269 write /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/patterns/3mono-rhythm-pattern0.txt 1239-pattern, f 31;
 #X obj 447 61 s update-path;
-#X msg 408 281 read -ascii -resize /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/projects/patch9/statesave/patterns/5mono-rhythm-pattern0.txt 2295-pattern, f 34;
+#X msg 408 281 read -ascii -resize /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/my_projects/patch9/statesave/patterns/3mono-rhythm-pattern0.txt 1734-pattern, f 34;
 #X obj 430 169 pack f f f s;
 #X obj 499 148 r patch-path;
 #X text 767 6 Not done:;
@@ -1962,12 +1962,12 @@
 #X obj 101 426 r SAVE-S;
 #X obj 100 489 del 2;
 #X obj 804 197 hsl 128 15 0 127 0 1 \$0-pattern-length-s \$0-pattern-length-r PTRN-LENGTH 133 7 0 10 #fcfcfc #000000 #000000 3200 1;
-#X obj 804 232 hsl 128 15 0 127 0 1 \$0-offset-s \$0-offset-r OFFSET+/- 133 7 0 10 #fcfcfc #000000 #000000 5600 1;
+#X obj 804 232 hsl 128 15 0 127 0 1 \$0-offset-s \$0-offset-r OFFSET+/- 133 7 0 10 #fcfcfc #000000 #000000 4400 1;
 #X text 291 -237 old function:;
-#X obj 1115 646 outlet;
+#X obj 1115 666 outlet;
 #X msg 1115 589 60;
 #X obj 1115 627 pack f f;
-#X text 1111 665 KICK MIDI OUT;
+#X text 1111 685 KICK MIDI OUT;
 #X obj 105 639 r \$0-pattern-length-s;
 #X floatatom 240 298 5 0 0 0 STEPS - - 8;
 #X obj 105 807 s \$0-pattern-length-r;
@@ -1975,7 +1975,7 @@
 #X obj 125 685 * 63;
 #X obj 125 706 + 1;
 #X obj 125 727 i;
-#N canvas 8 33 1425 831 clock-chaos 0;
+#N canvas 8 33 1425 831 clock-chaos 1;
 #X obj 90 68 inlet;
 #X obj 90 791 outlet;
 #X obj 425 80 loadbang;
@@ -2159,7 +2159,7 @@
 #X restore 1115 496 pd clock-chaos;
 #X obj 339 908 r \$0-offset-s;
 #X obj 339 946 s \$0-offset-r;
-#X obj 804 247 hsl 128 15 0 127 0 1 \$0-velo-rndm-s \$0-velo-rndm-r VELO-RNDM 133 7 0 10 #fcfcfc #000000 #000000 6400 1;
+#X obj 804 247 hsl 128 15 0 127 0 1 \$0-velo-rndm-s \$0-velo-rndm-r VELO-RNDM 133 7 0 10 #fcfcfc #000000 #000000 0 1;
 #N canvas 393 100 716 627 load-velo-rndm 0;
 #X obj 127 282 +;
 #X obj 127 262 t b f;
@@ -2459,9 +2459,9 @@
 #X text 186 31 (ENCODERS);
 #X restore 107 -70 pd \$0options-old;
 #X obj 308 406 bng 10 250 50 0 \$0-options-button \$0-options-button-r OPTIONS -45 5 0 10 #fcfcfc #000000 #000000;
-#X obj 137 343 hsl 128 15 0 127 0 1 \$0-param-2-s \$0-param-2-r OFFSET 133 7 0 10 #a86ada #000000 #000000 5600 1;
+#X obj 137 343 hsl 128 15 0 127 0 1 \$0-param-2-s \$0-param-2-r OFFSET 133 7 0 10 #a86ada #000000 #000000 4400 1;
 #X obj 137 312 hsl 128 15 0 127 0 1 \$0-param-1-s \$0-param-1-r PTRN-LTH 133 7 0 10 #8f5adf #000000 #000000 3200 1;
-#X obj 137 374 hsl 128 15 0 127 0 1 \$0-param-3-s \$0-param-3-r RND-VEL 133 7 0 10 #c07cd2 #000000 #000000 6400 1;
+#X obj 137 374 hsl 128 15 0 127 0 1 \$0-param-3-s \$0-param-3-r RND-VEL 133 7 0 10 #c07cd2 #000000 #000000 0 1;
 #X obj 137 327 hsl 61 8 0 127 0 1 \$0-param-9-s \$0-param-9-r empty 133 7 0 10 #606060 #000000 #000000 0 1;
 #X obj 204 327 hsl 61 8 0 127 0 1 \$0-param-17-s \$0-param-17-r empty 133 7 0 10 #7c7c7c #000000 #000000 0 1;
 #X obj 137 358 hsl 61 8 0 127 0 1 \$0-param-10-s \$0-param-10-r empty 133 7 0 10 #606060 #000000 #000000 0 1;
@@ -2482,7 +2482,7 @@
 #X obj 339 466 * 63;
 #X obj 339 487 + 1;
 #X obj 339 508 i;
-#N canvas 0 25 1440 847 steps-to-gui 1;
+#N canvas 0 25 1440 847 steps-to-gui 0;
 #X obj 55 34 r \$0-step-edit0;
 #X obj 82 74 r \$0-count-seq;
 #X obj 82 95 sel 0;
@@ -4474,6 +4474,8 @@
 #X connect 291 0 292 1;
 #X connect 292 0 236 0;
 #X restore -216 216 pd steps-to-gui;
+#X obj 1237 664 outlet;
+#X text 1235 685 mod clock out;
 #X connect 6 0 69 0;
 #X connect 6 0 34 0;
 #X connect 7 0 34 0;
@@ -4513,6 +4515,7 @@
 #X connect 94 0 95 0;
 #X connect 95 0 90 0;
 #X connect 96 0 31 0;
+#X connect 96 0 217 0;
 #X connect 97 0 103 0;
 #X connect 100 0 102 0;
 #X connect 101 0 100 0;

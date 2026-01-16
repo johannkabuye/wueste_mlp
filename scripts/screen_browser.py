@@ -160,7 +160,7 @@ class BrowserScreen(tk.Frame):
                     proj_name = tk.Label(
                         proj_container, text="",
                         bg="black", fg="#ffffff",
-                        anchor="w", padx=0, pady=0, bd=0, highlightthickness=0,
+                        anchor="w", padx=10, pady=5, bd=0, highlightthickness=0,  # Internal padding
                         font=self.app.fonts.big,
                         cursor="hand2",
                         wraplength=270,
@@ -169,13 +169,15 @@ class BrowserScreen(tk.Frame):
                     proj_name.pack(fill="x", anchor="nw")
                     proj_name.bind("<Button-1>", lambda e, idx=c: self.select_project(idx))
                     
-                    # Metadata label (smaller font, grey, left-aligned)
+                    # Metadata label (metadata font, grey, left-aligned)
                     proj_meta = tk.Label(
                         proj_container, text="",
                         bg="black", fg="#606060",
-                        anchor="w", padx=0, pady=0, bd=0, highlightthickness=0,
-                        font=(self.app.fonts.small.actual()['family'], 10),  # Explicit smaller size
-                        cursor="hand2"
+                        anchor="w", padx=10, pady=5, bd=0, highlightthickness=0,  # Single value for pady
+                        font=self.app.fonts.metadata,
+                        cursor="hand2",
+                        wraplength=250,  # Wrap text if too long
+                        justify="left"   # Left-align wrapped text
                     )
                     proj_meta.pack(fill="x", anchor="nw")
                     proj_meta.bind("<Button-1>", lambda e, idx=c: self.select_project(idx))
@@ -194,7 +196,7 @@ class BrowserScreen(tk.Frame):
                     proj_name = tk.Label(
                         proj_container, text="",
                         bg="black", fg="#ffffff",
-                        anchor="w", padx=0, pady=0, bd=0, highlightthickness=0,
+                        anchor="w", padx=10, pady=5, bd=0, highlightthickness=0,  # Internal padding
                         font=self.app.fonts.big,
                         cursor="hand2",
                         wraplength=270,
@@ -203,13 +205,15 @@ class BrowserScreen(tk.Frame):
                     proj_name.pack(fill="x", anchor="nw")
                     proj_name.bind("<Button-1>", lambda e, idx=c+4: self.select_project(idx))
                     
-                    # Metadata label (smaller font, grey, left-aligned)
+                    # Metadata label (metadata font, grey, left-aligned)
                     proj_meta = tk.Label(
                         proj_container, text="",
                         bg="black", fg="#606060",
-                        anchor="w", padx=0, pady=0, bd=0, highlightthickness=0,
-                        font=(self.app.fonts.small.actual()['family'], 10),  # Explicit smaller size
-                        cursor="hand2"
+                        anchor="w", padx=10, pady=5, bd=0, highlightthickness=0,  # Single value for pady
+                        font=self.app.fonts.metadata,
+                        cursor="hand2",
+                        wraplength=250,  # Wrap text if too long
+                        justify="left"   # Left-align wrapped text
                     )
                     proj_meta.pack(fill="x", anchor="nw")
                     proj_meta.bind("<Button-1>", lambda e, idx=c+4: self.select_project(idx))
@@ -330,6 +334,27 @@ class BrowserScreen(tk.Frame):
                 return timestamp.strftime("%b %d, %Y")
         except:
             return "unknown"
+    
+    def read_patch_data(self, project_folder_path):
+        """Read musical metadata from patch_data.txt in statesave folder"""
+        patch_data_file = os.path.join(project_folder_path, "statesave", "patch_data.txt")
+        
+        if not os.path.exists(patch_data_file):
+            return []
+        
+        try:
+            metadata_lines = []
+            with open(patch_data_file, 'r') as f:
+                for line in f:
+                    line = line.strip()
+                    # Skip empty lines
+                    if line:
+                        metadata_lines.append(line)
+            
+            return metadata_lines
+        except Exception as e:
+            print(f"Error reading patch_data.txt: {e}")
+            return []
     
     def toggle_sort_direction(self):
         """Toggle between descending (▼) and ascending (▲)"""
@@ -495,6 +520,9 @@ class BrowserScreen(tk.Frame):
             # Get the label tuple (name_label, meta_label)
             name_label, meta_label = self.project_labels[i]
             
+            # Get parent container for border
+            container = name_label.master
+            
             if project_idx < len(self.projects):
                 project = self.projects[project_idx]
                 project_name = project['name']
@@ -505,38 +533,53 @@ class BrowserScreen(tk.Frame):
                 
                 # Get timestamp metadata
                 timestamp_str = metadata.get(clean_name, None)
-                meta_text = self.format_timestamp(timestamp_str)
+                time_text = self.format_timestamp(timestamp_str)
+                
+                # Get musical metadata from patch_data.txt (list of lines)
+                folder_path = project.get('folder_path')
+                patch_data_lines = self.read_patch_data(folder_path) if folder_path else []
+                
+                # Build metadata text (combine time + all patch data lines)
+                meta_parts = [time_text]
+                meta_parts.extend(patch_data_lines)  # Add all lines from file
+                
+                meta_text = " • ".join(meta_parts)
                 
                 # Determine if selected
                 is_selected = (self.selected_project_index == project_idx)
                 
-                # Update name label
+                # Update name label and container background
                 if is_selected:
-                    # Selected: white text with underline
+                    # Selected: yellow text, dark grey background
                     name_label.config(
                         text=display_name, 
-                        fg="#ffffff", 
-                        bg="black",
-                        font=(self.app.fonts.big.actual()['family'], 
-                              self.app.fonts.big.actual()['size'], 
-                              "bold underline")
+                        fg="#ffff00",  # Yellow
+                        bg="#1a1a1a",  # Darker grey background
+                        font=self.app.fonts.big
                     )
+                    # Dark grey background on container and metadata
+                    container.config(bg="#1a1a1a", highlightthickness=0)
+                    meta_label.config(bg="#1a1a1a")  # Match container background
                 else:
-                    # Unselected: white text, no underline
+                    # Unselected: white text, black background
                     name_label.config(
                         text=display_name, 
-                        fg="#ffffff", 
+                        fg="#ffffff",  # White
                         bg="black",
                         font=self.app.fonts.big
                     )
+                    # Black background
+                    container.config(bg="black", highlightthickness=0)
+                    meta_label.config(bg="black")
                 
-                # Update metadata label (always grey, smaller font)
+                # Update metadata text (always grey text)
                 meta_label.config(text=meta_text, fg="#606060")
                 
             else:
                 # Empty cell
                 name_label.config(text="", fg="#606060", bg="black", font=self.app.fonts.big)
                 meta_label.config(text="", fg="#606060", bg="black")
+                container.config(bg="black", highlightthickness=0)
         
         # Update action buttons
         self.update_action_buttons()

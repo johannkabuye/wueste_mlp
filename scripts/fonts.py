@@ -14,6 +14,7 @@ ITEM_FONT_SIZE = 24
 STATUS_FONT_SIZE = 14
 SMALL_FONT_PT = 27
 BIG_FONT_PT = 29
+METADATA_FONT_PT = 18
 
 class FontManager:
     """Manages font creation with fallback"""
@@ -43,6 +44,9 @@ class FontManager:
             self._fonts['big'] = tkfont.Font(
                 family=FONT_FAMILY_PRIMARY, size=BIG_FONT_PT, weight="bold"
             )
+            self._fonts['metadata'] = tkfont.Font(
+                family=FONT_FAMILY_PRIMARY, size=METADATA_FONT_PT, weight="normal"
+            )
         except Exception:
             # Fallback to default fonts
             self._fonts['title'] = tkfont.Font(
@@ -62,6 +66,9 @@ class FontManager:
             )
             self._fonts['big'] = tkfont.Font(
                 family=FONT_FAMILY_FALLBACK, size=BIG_FONT_PT, weight="bold"
+            )
+            self._fonts['metadata'] = tkfont.Font(
+                family=FONT_FAMILY_FALLBACK, size=METADATA_FONT_PT, weight="normal"
             )
     
     def get(self, font_name):
@@ -91,3 +98,7 @@ class FontManager:
     @property
     def big(self):
         return self._fonts['big']
+    
+    @property
+    def metadata(self):
+        return self._fonts['metadata']
