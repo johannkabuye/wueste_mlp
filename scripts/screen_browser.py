@@ -263,9 +263,9 @@ class BrowserScreen(tk.Frame):
                         self.delete_button.bind("<Button-1>", lambda e: self.delete_selected_project())
                         self.delete_button.pack(fill="both", expand=True)
                     elif c == 6:
-                        # DUPLICATE button
+                        # COPY button (was DUPLICATE - shorter text)
                         self.duplicate_button = tk.Label(
-                            cell, text="DUPLICATE",
+                            cell, text="COPY",
                             font=self.app.fonts.small,
                             bg="#000000", fg="#303030",  # Start dark grey (disabled)
                             cursor="hand2", bd=0, relief="flat"
