@@ -6,7 +6,6 @@ import socket
 import subprocess
 import threading
 import os
-from confirmation_dialog import show_confirmation
 
 # Grid configuration (same as patch display)
 DEFAULT_ROWS = 11
@@ -172,37 +171,31 @@ class ControlScreen(tk.Frame):
     
     def save_placeholder(self):
         """SAVE button - placeholder for future functionality"""
-        # SHOW CONFIRMATION DIALOG
-        confirmed = show_confirmation(
-            parent=self,
-            message="Are you sure you want to save?\n\nThis will cause the audio to stop\nbriefly.",
-            timeout=10,
-            title="Save Project"
+        def on_confirm_save():
+            print("SAVE clicked (placeholder)")
+            self.update_status("SAVE - NOT IMPLEMENTED YET")
+            self.app.show_screen('control')
+        
+        self.app.show_confirmation(
+            message="Save project?\n\nThis will cause the audio to stop\nbriefly.",
+            on_yes=on_confirm_save,
+            return_screen='control',
+            timeout=10
         )
-        
-        if not confirmed:
-            print("Save cancelled by user")
-            return
-        
-        print("SAVE clicked (placeholder)")
-        self.update_status("SAVE - NOT IMPLEMENTED YET")
     
     def save_as_placeholder(self):
         """SAVE AS button - placeholder for future functionality"""
-        # SHOW CONFIRMATION DIALOG
-        confirmed = show_confirmation(
-            parent=self,
-            message="Are you sure you want to save as?\n\nThis will cause the audio to stop\nbriefly.",
-            timeout=10,
-            title="Save As"
+        def on_confirm_save_as():
+            print("SAVE AS clicked (placeholder)")
+            self.update_status("SAVE AS - NOT IMPLEMENTED YET")
+            self.app.show_screen('control')
+        
+        self.app.show_confirmation(
+            message="Save project as new copy?\n\nThis will cause the audio to stop\nbriefly.",
+            on_yes=on_confirm_save_as,
+            return_screen='control',
+            timeout=10
         )
-        
-        if not confirmed:
-            print("Save As cancelled by user")
-            return
-        
-        print("SAVE AS clicked (placeholder)")
-        self.update_status("SAVE AS - NOT IMPLEMENTED YET")
     
     def on_show(self):
         """Called when this screen becomes visible"""
@@ -256,31 +249,27 @@ class ControlScreen(tk.Frame):
         """Shutdown the system"""
         print("Shutdown button clicked!")
         
-        # SHOW CONFIRMATION DIALOG
-        confirmed = show_confirmation(
-            parent=self,
-            message="Are you sure you want to shut down\nthe system?",
-            timeout=10,
-            title="Shutdown System"
+        def on_confirm_shutdown():
+            self.update_status("SHUTTING DOWN...")
+            
+            def do_shutdown():
+                import time
+                time.sleep(1)
+                
+                # Clean up Pure Data
+                self.app.pd_manager.cleanup()
+                
+                # Shutdown system (we're on Raspberry Pi, always Linux)
+                try:
+                    subprocess.run(["sudo", "shutdown", "now"], check=False)
+                except Exception as e:
+                    print(f"Shutdown error: {e}")
+            
+            threading.Thread(target=do_shutdown, daemon=True).start()
+        
+        self.app.show_confirmation(
+            message="Shut down the system?",
+            on_yes=on_confirm_shutdown,
+            return_screen='control',
+            timeout=10
         )
-        
-        if not confirmed:
-            print("Shutdown cancelled by user")
-            return
-        
-        self.update_status("SHUTTING DOWN...")
-        
-        def do_shutdown():
-            import time
-            time.sleep(1)
-            
-            # Clean up Pure Data
-            self.app.pd_manager.cleanup()
-            
-            # Shutdown system (we're on Raspberry Pi, always Linux)
-            try:
-                subprocess.run(["sudo", "shutdown", "now"], check=False)
-            except Exception as e:
-                print(f"Shutdown error: {e}")
-        
-        threading.Thread(target=do_shutdown, daemon=True).start()

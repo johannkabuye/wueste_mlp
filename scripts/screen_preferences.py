@@ -6,7 +6,6 @@ import subprocess
 import threading
 import sys
 import os
-from confirmation_dialog import show_confirmation
 
 # Grid configuration (same as other screens)
 DEFAULT_ROWS = 11
@@ -145,86 +144,81 @@ class PreferencesScreen(tk.Frame):
         if self.updating:
             return
         
-        # SHOW CONFIRMATION DIALOG
-        confirmed = show_confirmation(
-            parent=self,
-            message="Update Molipe from GitHub?\n\nThis will restart Molipe and stop\nany open project.",
-            timeout=10,
-            title="Update System"
-        )
-        
-        if not confirmed:
-            print("Update cancelled by user")
-            return
-        
-        self.updating = True
-        self.update_status("UPDATING...")
-        
-        def do_update():
-            try:
-                result = subprocess.run(
-                    ["git", "pull", "--force"],
-                    cwd=self.app.molipe_root,
-                    capture_output=True,
-                    text=True,
-                    timeout=30
-                )
-                
-                if result.returncode == 0:
-                    # Check if anything was actually updated
-                    if "Already up to date" in result.stdout:
-                        self.after(0, lambda: self.update_status("ALREADY UP TO DATE"))
-                        self.updating = False
+        def on_confirm_update():
+            self.updating = True
+            self.update_status("UPDATING...")
+            
+            def do_update():
+                try:
+                    result = subprocess.run(
+                        ["git", "pull", "--force"],
+                        cwd=self.app.molipe_root,
+                        capture_output=True,
+                        text=True,
+                        timeout=30
+                    )
+                    
+                    if result.returncode == 0:
+                        # Check if anything was actually updated
+                        if "Already up to date" in result.stdout:
+                            self.after(0, lambda: self.update_status("ALREADY UP TO DATE"))
+                            self.updating = False
+                            self.after(2000, lambda: self.app.show_screen('preferences'))
+                        else:
+                            # Files were updated - restart the app!
+                            self.after(0, lambda: self.update_status("RESTARTING..."))
+                            import time
+                            time.sleep(1)
+                            
+                            # Restart Python process
+                            print("UPDATE COMPLETE - RESTARTING APP...")
+                            python = sys.executable
+                            os.execv(python, [python] + sys.argv)
                     else:
-                        # Files were updated - restart the app!
-                        self.after(0, lambda: self.update_status("RESTARTING..."))
-                        import time
-                        time.sleep(1)
-                        
-                        # Restart Python process
-                        print("UPDATE COMPLETE - RESTARTING APP...")
-                        python = sys.executable
-                        os.execv(python, [python] + sys.argv)
-                else:
-                    self.after(0, lambda: self.update_status("UPDATE FAILED", error=True))
+                        self.after(0, lambda: self.update_status("UPDATE FAILED", error=True))
+                        self.updating = False
+                        self.after(2000, lambda: self.app.show_screen('preferences'))
+                except Exception as e:
+                    error_msg = str(e)
+                    self.after(0, lambda: self.update_status(f"ERROR: {error_msg}", error=True))
                     self.updating = False
-            except Exception as e:
-                error_msg = str(e)
-                self.after(0, lambda: self.update_status(f"ERROR: {error_msg}", error=True))
-                self.updating = False
+                    self.after(2000, lambda: self.app.show_screen('preferences'))
+            
+            threading.Thread(target=do_update, daemon=True).start()
         
-        threading.Thread(target=do_update, daemon=True).start()
+        self.app.show_confirmation(
+            message="Update Molipe from GitHub?\n\nThis will restart Molipe and stop\nany open project.",
+            on_yes=on_confirm_update,
+            return_screen='preferences',
+            timeout=10
+        )
     
     def exit_to_desktop(self):
         """Exit GUI but keep system running"""
         print("Exit to desktop clicked!")
         
-        # SHOW CONFIRMATION DIALOG
-        confirmed = show_confirmation(
-            parent=self,
+        def on_confirm_exit():
+            self.update_status("EXITING...")
+            
+            def do_exit():
+                import time
+                time.sleep(0.5)
+                
+                # Clean up Pure Data
+                self.app.pd_manager.cleanup()
+                
+                # Exit the application (but not the system)
+                print("Exiting Molipe GUI...")
+                self.app.root.destroy()
+            
+            threading.Thread(target=do_exit, daemon=True).start()
+        
+        self.app.show_confirmation(
             message="Exit Molipe GUI?\n\nThis will close the interface but\nkeep the system running.",
-            timeout=10,
-            title="Exit to Desktop"
+            on_yes=on_confirm_exit,
+            return_screen='preferences',
+            timeout=10
         )
-        
-        if not confirmed:
-            print("Exit cancelled by user")
-            return
-        
-        self.update_status("EXITING...")
-        
-        def do_exit():
-            import time
-            time.sleep(0.5)
-            
-            # Clean up Pure Data
-            self.app.pd_manager.cleanup()
-            
-            # Exit the application (but not the system)
-            print("Exiting Molipe GUI...")
-            self.app.root.destroy()
-        
-        threading.Thread(target=do_exit, daemon=True).start()
     
     def on_show(self):
         """Called when this screen becomes visible"""

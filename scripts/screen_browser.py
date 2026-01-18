@@ -8,12 +8,11 @@ import threading
 import json
 from datetime import datetime
 
-# Import project duplicator, deleter, and confirmation dialog
+# Import project duplicator and deleter
 script_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, script_dir)
 from project_duplicator import duplicate_project
 from project_deleter import delete_project
-from confirmation_dialog import show_confirmation
 
 # Grid configuration (same as patch display and control panel)
 DEFAULT_ROWS = 11
@@ -661,6 +660,24 @@ class BrowserScreen(tk.Frame):
             print("main.pd file not found")
             return
         
+        # Define the actual load action
+        def do_load():
+            # Update timestamp for this project
+            project_name = selected_project['name']
+            # Remove " (!)" suffix if present
+            if project_name.endswith(" (!)"):
+                project_name = project_name[:-4]
+            self.update_project_timestamp(project_name)
+            
+            # Start Pure Data
+            print(f"Loading: {selected_project['name']}")
+            
+            if self.app.pd_manager.start_pd(main_pd_path):
+                # Switch to patch display
+                self.after(500, lambda: self.app.show_screen('patch'))
+            else:
+                print("Failed to load project")
+        
         # CHECK IF PATCH IS ALREADY RUNNING
         if self.app.pd_manager.is_running():
             # Get current patch name
@@ -675,33 +692,16 @@ class BrowserScreen(tk.Frame):
             if new_name.endswith(" (!)"):
                 new_name = new_name[:-4]
             
-            # SHOW CONFIRMATION DIALOG
-            confirmed = show_confirmation(
-                parent=self,
+            # Show confirmation screen
+            self.app.show_confirmation(
                 message=f"Close '{current_name}' and load\n'{new_name}'?",
-                timeout=10,
-                title="Load New Patch"
+                on_yes=do_load,
+                return_screen='browser',
+                timeout=10
             )
-            
-            if not confirmed:
-                print("Load cancelled by user")
-                return
-        
-        # Update timestamp for this project
-        project_name = selected_project['name']
-        # Remove " (!)" suffix if present
-        if project_name.endswith(" (!)"):
-            project_name = project_name[:-4]
-        self.update_project_timestamp(project_name)
-        
-        # Start Pure Data
-        print(f"Loading: {selected_project['name']}")
-        
-        if self.app.pd_manager.start_pd(main_pd_path):
-            # Switch to patch display
-            self.after(500, lambda: self.app.show_screen('patch'))
         else:
-            print("Failed to load project")
+            # No patch running, just load directly
+            do_load()
     
     def duplicate_selected_project(self):
         """Duplicate the selected project with Zettelkasten-style naming and visual feedback"""
@@ -721,40 +721,42 @@ class BrowserScreen(tk.Frame):
         if source_name.endswith(" (!)"):
             source_name = source_name[:-4]
         
-        # SHOW CONFIRMATION DIALOG
-        confirmed = show_confirmation(
-            parent=self,
-            message=f"Are you sure you want to duplicate\n'{source_name}'?",
-            timeout=10,
-            title="Duplicate Project"
-        )
-        
-        if not confirmed:
-            print(f"Duplicate cancelled by user")
-            return
-        
-        print(f"Duplicating: {source_name}")
-        self.show_sync_status("DUPLICATING...", syncing=True)
-        
-        # Call duplicator in background thread
-        projects_dir = os.path.join(self.app.molipe_root, "my_projects")
-        
-        def do_duplicate():
-            success, result = duplicate_project(projects_dir, source_name)
+        # Define what happens when user confirms
+        def on_confirm_duplicate():
+            print(f"Duplicating: {source_name}")
+            self.show_sync_status("DUPLICATING...", syncing=True)
             
-            # Update UI from main thread
-            if success:
-                print(f"✓ Duplicated successfully: {result}")
-                self.after(0, lambda: self.show_sync_status("✓ DUPLICATED", error=False, duration=3000))
+            # Call duplicator in background thread
+            projects_dir = os.path.join(self.app.molipe_root, "my_projects")
+            
+            def do_duplicate():
+                success, result = duplicate_project(projects_dir, source_name)
                 
-                # Refresh the browser to show new project
-                self.after(100, lambda: self.refresh_and_select_new_project(result))
-            else:
-                print(f"✗ Duplication failed: {result}")
-                error_msg = result[:20] if len(result) > 20 else result  # Truncate long errors
-                self.after(0, lambda: self.show_sync_status(f"FAILED", error=True, duration=5000))
+                # Update UI from main thread
+                if success:
+                    print(f"✓ Duplicated successfully: {result}")
+                    self.after(0, lambda: self.show_sync_status("✓ DUPLICATED", error=False, duration=3000))
+                    
+                    # Refresh the browser to show new project
+                    self.after(100, lambda: self.refresh_and_select_new_project(result))
+                else:
+                    print(f"✗ Duplication failed: {result}")
+                    error_msg = result[:20] if len(result) > 20 else result
+                    self.after(0, lambda: self.show_sync_status(f"FAILED", error=True, duration=5000))
+            
+            threading.Thread(target=do_duplicate, daemon=True).start()
+            
+            # Return to browser
+            self.app.show_screen('browser')
         
-        threading.Thread(target=do_duplicate, daemon=True).start()
+        # Show confirmation screen
+        self.app.show_confirmation(
+            message=f"Duplicate '{source_name}'?",
+            on_yes=on_confirm_duplicate,
+            on_no=None,  # Default: return to browser
+            return_screen='browser',
+            timeout=10
+        )
     
     def refresh_and_select_new_project(self, new_project_name):
         """Refresh browser and select the newly created project"""
@@ -771,7 +773,7 @@ class BrowserScreen(tk.Frame):
         self.update_display()
     
     def delete_selected_project(self):
-        """Delete the selected project (move to trash) with confirmation and visual feedback"""
+        """Delete the selected project (move to trash) with confirmation screen"""
         # Only delete if something is selected
         if self.selected_project_index is None:
             print("No project selected")
@@ -788,38 +790,42 @@ class BrowserScreen(tk.Frame):
         if project_name.endswith(" (!)"):
             project_name = project_name[:-4]
         
-        # SHOW CONFIRMATION DIALOG
-        confirmed = show_confirmation(
-            parent=self,
-            message=f"Are you sure you want to delete\n'{project_name}'?\n\nIt will be moved to trash.",
-            timeout=10,
-            title="Delete Project"
-        )
-        
-        if not confirmed:
-            print(f"Delete cancelled by user")
-            return
-        
-        print(f"Deleting: {project_name}")
-        self.show_sync_status("DELETING...", syncing=True)
-        
-        # Call deleter in background thread
-        projects_dir = os.path.join(self.app.molipe_root, "my_projects")
-        
-        def do_delete():
-            success, result = delete_project(projects_dir, project_name)
+        # Define what happens when user confirms
+        def on_confirm_delete():
+            print(f"Deleting: {project_name}")
+            self.show_sync_status("DELETING...", syncing=True)
             
-            # Update UI from main thread
-            if success:
-                print(f"✓ Moved to trash: {result}")
-                self.after(0, lambda: self.show_sync_status("✓ DELETED", error=False, duration=3000))
+            # Call deleter in background thread
+            projects_dir = os.path.join(self.app.molipe_root, "my_projects")
+            
+            def do_delete():
+                success, result = delete_project(projects_dir, project_name)
                 
-                # Refresh the browser to remove deleted project
-                self.after(100, lambda: self.refresh_projects())
-            else:
-                print(f"✗ Deletion failed: {result}")
-                error_msg = result[:20] if len(result) > 20 else result  # Truncate long errors
-                self.after(0, lambda: self.show_sync_status(f"DELETE FAILED", error=True, duration=5000))
+                # Update UI from main thread
+                if success:
+                    print(f"✓ Moved to trash: {result}")
+                    self.after(0, lambda: self.show_sync_status("✓ DELETED", error=False, duration=3000))
+                    
+                    # Refresh the browser to remove deleted project
+                    self.after(100, lambda: self.refresh_projects())
+                else:
+                    print(f"✗ Deletion failed: {result}")
+                    error_msg = result[:20] if len(result) > 20 else result
+                    self.after(0, lambda: self.show_sync_status(f"DELETE FAILED", error=True, duration=5000))
+            
+            threading.Thread(target=do_delete, daemon=True).start()
+            
+            # Return to browser
+            self.app.show_screen('browser')
+        
+        # Show confirmation screen
+        self.app.show_confirmation(
+            message=f"Delete '{project_name}'?\n\nIt will be moved to trash.",
+            on_yes=on_confirm_delete,
+            on_no=None,  # Default: return to browser
+            return_screen='browser',
+            timeout=10
+        )
         
         threading.Thread(target=do_delete, daemon=True).start()
     

@@ -16,6 +16,7 @@ from screen_control import ControlScreen
 from screen_browser import BrowserScreen
 from screen_patch_display import PatchDisplayScreen
 from screen_preferences import PreferencesScreen
+from screen_confirmation import ConfirmationScreen
 from fonts import FontManager
 from process_manager import ProcessManager
 
@@ -120,6 +121,7 @@ class MolipeApp:
         self.screens['browser'] = BrowserScreen(self.root, self)
         self.screens['patch'] = PatchDisplayScreen(self.root, self)
         self.screens['preferences'] = PreferencesScreen(self.root, self)
+        self.screens['confirmation'] = ConfirmationScreen(self.root, self)
     
     def show_screen(self, name):
         """
@@ -158,6 +160,26 @@ class MolipeApp:
         # Update control panel button state
         if name != 'control' and 'control' in self.screens:
             self.screens['control'].refresh_button_state()
+    
+    def show_confirmation(self, message, on_yes=None, on_no=None, return_screen='browser', timeout=10):
+        """
+        Show confirmation screen (convenience method)
+        
+        Args:
+            message: Message to display
+            on_yes: Callback when YES clicked
+            on_no: Callback when NO clicked (optional, default returns to return_screen)
+            return_screen: Screen to return to after confirmation
+            timeout: Auto-cancel seconds (0 = disabled, default 10)
+        """
+        self.screens['confirmation'].show_confirmation(
+            message=message,
+            on_yes=on_yes,
+            on_no=on_no,
+            return_screen=return_screen,
+            timeout=timeout
+        )
+        self.show_screen('confirmation')
     
     def on_escape(self):
         """Handle ESC key press"""
