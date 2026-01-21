@@ -1,5 +1,5 @@
 """
-Process manager for Pure Data - Following Patchbox OS pattern
+Process manager for Pure Data - Simplified for integrated main.pd
 """
 import subprocess
 import os
@@ -15,8 +15,8 @@ class ProcessManager:
     
     def start_pd(self, patch_path):
         """
-        Start Pure Data with mother.pd + project's main.pd
-        Both patches open in the same PD instance
+        Start Pure Data with project's main.pd
+        (mother.pd functionality is now integrated into main.pd)
         
         Args:
             patch_path: Full path to project's main.pd file
@@ -29,40 +29,35 @@ class ProcessManager:
             print(f"Killing existing Pure Data instances...")
             self.stop_pd()
             
-            # Get project patch info
+            # Get project info
             project_dir = os.path.dirname(patch_path)
             project_patch = os.path.basename(patch_path)
             
-            # Mother.pd location (in molipe root)
-            molipe_root = os.path.dirname(os.path.dirname(project_dir))  # Go up from projects/project-name/ to molipe root
-            mother_path = os.path.join(molipe_root, "mother.pd")
-            
-            if not os.path.exists(mother_path):
-                print(f"ERROR: mother.pd not found at: {mother_path}")
+            # Verify patch exists
+            if not os.path.exists(patch_path):
+                print(f"ERROR: Patch not found: {patch_path}")
                 return False
             
             print(f"Starting Pure Data with:")
-            print(f"  - mother.pd: {mother_path}")
             print(f"  - project: {project_patch}")
-            print(f"  - project directory: {project_dir}")
+            print(f"  - directory: {project_dir}")
             
             # Build command based on platform
             if sys.platform.startswith("linux"):
-                # Linux - Open BOTH patches in same PD instance with 8 audio outputs
-                # puredata -nogui -send ";pd dsp 1" -outchannels 8 mother.pd /path/to/project/main.pd
+                # Linux - Open project's main.pd with 8 audio outputs
+                # puredata -nogui -send ";pd dsp 1" -outchannels 8 /path/to/project/main.pd
                 cmd = [
                     'puredata',
                     '-stderr',              # Show errors
                     '-nogui',               # No GUI
                     '-send', ';pd dsp 1',   # Enable audio DSP
                     '-outchannels', '8',    # 8 audio outputs (HiFiBerry HAT)
-                    mother_path,            # First patch: mother.pd (full path)
-                    patch_path              # Second patch: project's main.pd (full path)
+                    patch_path              # Project's main.pd (full path)
                 ]
                 
                 print(f"Command: {' '.join(cmd)}")
                 
-                # Start PD (no need to change directory - using full paths)
+                # Start PD
                 self.pd_process = subprocess.Popen(
                     cmd,
                     stderr=subprocess.PIPE,
@@ -83,13 +78,11 @@ class ProcessManager:
                     return False
                 
                 print(f"Pure Data started! PID: {self.pd_process.pid}")
-                print(f"  - mother.pd loaded")
                 print(f"  - {project_patch} loaded")
                 
             else:
                 # macOS - mock for testing
                 print(f"[MOCK PD] Would start Pure Data with:")
-                print(f"  - mother.pd: {mother_path}")
                 print(f"  - project: {patch_path}")
                 self.pd_process = subprocess.Popen(
                     ['sleep', '9999'],
