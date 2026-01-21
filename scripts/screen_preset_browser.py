@@ -1,6 +1,6 @@
 """
 Preset Browser Screen - Browse and start from factory preset projects
-Simplified version without filter functionality
+Matches project browser look and feel exactly
 """
 import tkinter as tk
 import os
@@ -8,7 +8,7 @@ import sys
 import threading
 from project_duplicator import duplicate_project
 
-# Grid configuration (same as other screens)
+# Grid configuration (same as project browser)
 DEFAULT_ROWS = 11
 COLS_PER_ROW = [4, 4, 4, 8, 4, 4, 4, 8, 4, 8, 8]
 ROW_HEIGHTS = [60, 210, 50, 0, 0, 210, 50, 5, 20, 50, 50]
@@ -17,12 +17,7 @@ PRESETS_PER_PAGE = 8
 class PresetBrowserScreen(tk.Frame):
     """
     Browse factory preset projects and start new projects from them
-    
-    Features:
-    - Display presets from preset_projects/ directory
-    - Show metadata (title, level, style, description)
-    - 8 presets per page with pagination
-    - START button duplicates preset to my_projects/ and loads it
+    Exact match to project browser UI
     """
     
     def __init__(self, parent, app):
@@ -40,7 +35,7 @@ class PresetBrowserScreen(tk.Frame):
         
         # UI references
         self.cell_frames = []
-        self.preset_labels = []
+        self.preset_labels = []  # Will store tuples of (name_label, meta_label)
         self.page_label = None
         self.status_label = None
         self.start_button = None
@@ -50,7 +45,7 @@ class PresetBrowserScreen(tk.Frame):
         self._build_ui()
     
     def _build_ui(self):
-        """Build grid-based preset browser UI"""
+        """Build grid-based preset browser UI (matches project browser exactly)"""
         
         # Main grid container
         container = tk.Frame(self, bg="black", bd=0, highlightthickness=0)
@@ -85,53 +80,108 @@ class PresetBrowserScreen(tk.Frame):
                 cell.grid_propagate(False)
                 row_cells.append(cell)
                 
-                # Row 0: Navigation and status
-                if r == 0:
-                    if c == 0:
-                        # HOME button
-                        home_button = tk.Label(
-                            cell, text="HOME",
-                            font=self.app.fonts.small,
-                            bg="black", fg="white",
-                            cursor="hand2", bd=0, relief="flat"
-                        )
-                        home_button.bind("<Button-1>", lambda e: self.go_home())
-                        home_button.pack(fill="both", expand=True)
-                    
-                    elif c == 3:
-                        # Status label (upper right)
-                        self.status_label = tk.Label(
-                            cell,
-                            text="PRESETS",
-                            bg="black", fg="#606060",
-                            anchor="e", padx=10, pady=0, bd=0, highlightthickness=0,
-                            font=self.app.fonts.status
-                        )
-                        self.status_label.pack(fill="both", expand=True)
-                
-                # Rows 1-8: Preset list (8 slots)
-                elif 1 <= r <= 8:
-                    preset_idx = r - 1  # 0-7
-                    
-                    # Create label for preset
-                    preset_label = tk.Label(
+                # Row 0, Cell 0: MENU button (same as project browser)
+                if r == 0 and c == 0:
+                    menu_btn = tk.Label(
                         cell,
-                        text="",
-                        font=self.app.fonts.big,
-                        bg="black", fg="#606060",
-                        anchor="w", padx=10, bd=0, relief="flat",
+                        text="////MENU",
+                        bg="black", fg="white",
+                        anchor="w", padx=10, pady=0, bd=0, highlightthickness=0,
+                        font=self.app.fonts.small,
                         cursor="hand2"
                     )
-                    preset_label.bind("<Button-1>", lambda e, idx=preset_idx: self.select_preset(idx))
-                    preset_label.grid(row=0, column=0, columnspan=4, sticky="nsew")
-                    self.preset_labels.append(preset_label)
+                    menu_btn.bind("<Button-1>", lambda e: self.go_home())
+                    menu_btn.pack(fill="both", expand=True)
                 
-                # Row 9: Pagination and action buttons
+                # Row 0, Cell 3: Status label (matches sync status position)
+                elif r == 0 and c == 3:
+                    self.status_label = tk.Label(
+                        cell,
+                        text="PRESETS",
+                        bg="black", fg="#606060",
+                        anchor="e", padx=10, pady=0, bd=0, highlightthickness=0,
+                        font=self.app.fonts.small
+                    )
+                    self.status_label.pack(fill="both", expand=True)
+                
+                # Row 1: Preset cells 0-3 (matches project browser exactly)
+                elif r == 1:
+                    # Create a container frame for name + metadata
+                    preset_container = tk.Frame(cell, bg="black", bd=0, highlightthickness=0)
+                    preset_container.pack(fill="both", expand=True, padx=5, pady=5)
+                    preset_container.bind("<Button-1>", lambda e, idx=c: self.select_preset(idx))
+                    
+                    # Preset name label (big font, left-aligned)
+                    preset_name = tk.Label(
+                        preset_container, text="",
+                        bg="black", fg="#ffffff",
+                        anchor="w", padx=10, pady=5, bd=0, highlightthickness=0,
+                        font=self.app.fonts.big,
+                        cursor="hand2",
+                        wraplength=270,
+                        justify="left"
+                    )
+                    preset_name.pack(fill="x", anchor="nw")
+                    preset_name.bind("<Button-1>", lambda e, idx=c: self.select_preset(idx))
+                    
+                    # Metadata label (metadata font, grey, left-aligned)
+                    preset_meta = tk.Label(
+                        preset_container, text="",
+                        bg="black", fg="#606060",
+                        anchor="w", padx=10, pady=5, bd=0, highlightthickness=0,
+                        font=self.app.fonts.metadata,
+                        cursor="hand2",
+                        wraplength=250,
+                        justify="left"
+                    )
+                    preset_meta.pack(fill="x", anchor="nw")
+                    preset_meta.bind("<Button-1>", lambda e, idx=c: self.select_preset(idx))
+                    
+                    # Store both labels as a tuple (same as project browser)
+                    self.preset_labels.append((preset_name, preset_meta))
+                
+                # Row 5: Preset cells 4-7 (matches project browser exactly)
+                elif r == 5:
+                    # Create a container frame for name + metadata
+                    preset_container = tk.Frame(cell, bg="black", bd=0, highlightthickness=0)
+                    preset_container.pack(fill="both", expand=True, padx=5, pady=5)
+                    preset_container.bind("<Button-1>", lambda e, idx=c+4: self.select_preset(idx+4))
+                    
+                    # Preset name label (big font, left-aligned)
+                    preset_name = tk.Label(
+                        preset_container, text="",
+                        bg="black", fg="#ffffff",
+                        anchor="w", padx=10, pady=5, bd=0, highlightthickness=0,
+                        font=self.app.fonts.big,
+                        cursor="hand2",
+                        wraplength=270,
+                        justify="left"
+                    )
+                    preset_name.pack(fill="x", anchor="nw")
+                    preset_name.bind("<Button-1>", lambda e, idx=c+4: self.select_preset(idx+4))
+                    
+                    # Metadata label (metadata font, grey, left-aligned)
+                    preset_meta = tk.Label(
+                        preset_container, text="",
+                        bg="black", fg="#606060",
+                        anchor="w", padx=10, pady=5, bd=0, highlightthickness=0,
+                        font=self.app.fonts.metadata,
+                        cursor="hand2",
+                        wraplength=250,
+                        justify="left"
+                    )
+                    preset_meta.pack(fill="x", anchor="nw")
+                    preset_meta.bind("<Button-1>", lambda e, idx=c+4: self.select_preset(idx+4))
+                    
+                    # Store both labels as a tuple (same as project browser)
+                    self.preset_labels.append((preset_name, preset_meta))
+                
+                # Row 9: Navigation buttons (matches project browser)
                 elif r == 9:
                     if c == 0:
                         # PREVIOUS PAGE button
                         self.prev_button = tk.Label(
-                            cell, text="PREV",
+                            cell, text="◀ PREV",
                             font=self.app.fonts.small,
                             bg="#000000", fg="#ffffff",
                             cursor="hand2", bd=0, relief="flat"
@@ -141,7 +191,7 @@ class PresetBrowserScreen(tk.Frame):
                     elif c == 1:
                         # NEXT PAGE button
                         self.next_button = tk.Label(
-                            cell, text="NEXT",
+                            cell, text="NEXT ▶",
                             font=self.app.fonts.small,
                             bg="#000000", fg="#ffffff",
                             cursor="hand2", bd=0, relief="flat"
@@ -159,7 +209,7 @@ class PresetBrowserScreen(tk.Frame):
                         )
                         self.page_label.pack(fill="both", expand=True)
                     elif c == 7:
-                        # START button (last column)
+                        # START button (replaces LOAD in project browser)
                         self.start_button = tk.Label(
                             cell, text="START",
                             font=self.app.fonts.small,
@@ -247,69 +297,105 @@ class PresetBrowserScreen(tk.Frame):
         return metadata
     
     def update_display(self):
-        """Update preset list display for current page"""
+        """Update preset list display for current page (matches project browser exactly)"""
         # Calculate start and end indices for current page
         start_idx = self.current_page * PRESETS_PER_PAGE
         end_idx = min(start_idx + PRESETS_PER_PAGE, len(self.presets))
         
-        # Update each preset label
-        for i, label in enumerate(self.preset_labels):
+        # Update page label
+        if self.page_label:
+            page_display = f"{self.current_page + 1}/{self.total_pages}" if self.total_pages > 0 else "0/0"
+            self.page_label.config(text=page_display)
+        
+        # Update each preset label (8 presets per page)
+        for i in range(PRESETS_PER_PAGE):
             preset_idx = start_idx + i
+            
+            # Get the label tuple (name_label, meta_label)
+            name_label, meta_label = self.preset_labels[i]
+            
+            # Get parent container for background styling
+            container = name_label.master
             
             if preset_idx < end_idx:
                 # Show preset
                 preset = self.presets[preset_idx]
                 
-                # Display format: "Title (level, style)"
-                display_text = preset['title']
-                if preset['level'] or preset['style']:
-                    tags = []
-                    if preset['level']:
-                        tags.append(preset['level'])
-                    if preset['style']:
-                        tags.append(preset['style'])
-                    display_text += f" ({', '.join(tags)})"
+                # Display format: "Title"
+                display_name = preset['title']
                 
-                label.config(text=display_text, fg="#ffffff" if i == (self.selected_preset_index or -1) - start_idx else "#606060")
+                # Build metadata text: "level, style"
+                meta_parts = []
+                if preset['level']:
+                    meta_parts.append(preset['level'])
+                if preset['style']:
+                    meta_parts.append(preset['style'])
+                meta_text = ", ".join(meta_parts) if meta_parts else ""
+                
+                # Determine if selected
+                is_selected = (self.selected_preset_index == preset_idx)
+                
+                # Update name label and container background (EXACT match to project browser)
+                if is_selected:
+                    # Selected: yellow text, dark grey background
+                    name_label.config(
+                        text=display_name,
+                        fg="#ffff00",  # Yellow (exactly like project browser)
+                        bg="#1a1a1a",  # Darker grey background
+                        font=self.app.fonts.big
+                    )
+                    # Dark grey background on container and metadata
+                    container.config(bg="#1a1a1a", highlightthickness=0)
+                    meta_label.config(bg="#1a1a1a")  # Match container background
+                else:
+                    # Unselected: white text, black background
+                    name_label.config(
+                        text=display_name,
+                        fg="#ffffff",  # White
+                        bg="black",
+                        font=self.app.fonts.big
+                    )
+                    # Black background
+                    container.config(bg="black", highlightthickness=0)
+                    meta_label.config(bg="black")
+                
+                # Update metadata text (always grey text)
+                meta_label.config(text=meta_text, fg="#606060")
+                
             else:
-                # Empty slot
-                label.config(text="", fg="#606060")
-        
-        # Update page indicator
-        if self.page_label:
-            if self.total_pages > 0:
-                self.page_label.config(text=f"{self.current_page + 1}/{self.total_pages}")
-            else:
-                self.page_label.config(text="0/0")
-        
-        # Update navigation buttons
-        self.update_nav_buttons()
+                # Empty cell
+                name_label.config(text="", fg="#606060", bg="black", font=self.app.fonts.big)
+                meta_label.config(text="", fg="#606060", bg="black")
+                container.config(bg="black", highlightthickness=0)
         
         # Update action button
         self.update_action_button()
+        
+        # Update navigation button states
+        self.update_nav_buttons()
     
     def update_nav_buttons(self):
-        """Update PREV/NEXT button states"""
+        """Update PREV/NEXT button states (matches project browser)"""
         if self.prev_button:
             if self.current_page > 0:
-                self.prev_button.config(fg="#ffffff")  # Enabled
+                self.prev_button.config(fg="#ffffff")  # Enabled (white)
             else:
-                self.prev_button.config(fg="#303030")  # Disabled (first page)
+                self.prev_button.config(fg="#303030")  # Disabled (dark grey)
         
         if self.next_button:
             if self.current_page < self.total_pages - 1:
-                self.next_button.config(fg="#ffffff")  # Enabled
+                self.next_button.config(fg="#ffffff")  # Enabled (white)
             else:
-                self.next_button.config(fg="#303030")  # Disabled (last page)
+                self.next_button.config(fg="#303030")  # Disabled (dark grey)
     
     def update_action_button(self):
-        """Update START button based on selection"""
+        """Update START button based on selection (matches project browser)"""
         if self.selected_preset_index is not None:
-            # Something selected - START enabled
+            # Something selected - START enabled (white)
             if self.start_button:
                 self.start_button.config(fg="#ffffff")
         else:
-            # Nothing selected - START disabled
+            # Nothing selected - START disabled (dark grey)
             if self.start_button:
                 self.start_button.config(fg="#303030")
     
@@ -319,7 +405,7 @@ class PresetBrowserScreen(tk.Frame):
         preset_idx = start_idx + display_idx
         
         if preset_idx < len(self.presets):
-            # Toggle selection
+            # Toggle selection (exactly like project browser)
             if self.selected_preset_index == preset_idx:
                 self.selected_preset_index = None  # Deselect
             else:
@@ -387,7 +473,7 @@ class PresetBrowserScreen(tk.Frame):
         threading.Thread(target=do_start, daemon=True).start()
     
     def update_status(self, message, duration=3000):
-        """Update status label with message"""
+        """Update status label with message (matches project browser)"""
         if self.status_label:
             self.status_label.config(text=message)
             
