@@ -174,54 +174,56 @@ class USBBrowserScreen(tk.Frame):
                     # Store both labels as a tuple (same as project browser)
                     self.project_labels.append((proj_name, proj_meta))
                 
-                # Row 8: Page indicator (matches project browser)
+                # Row 8: Empty (4 columns)
                 elif r == 8:
-                    if c == 0:
-                        self.page_label = tk.Label(
-                            row_frame,
-                            text="0/0",
-                            font=self.app.fonts.small,
-                            bg="black", fg="#606060",
-                            anchor="center"
-                        )
-                        self.page_label.grid(row=0, column=0, columnspan=8, sticky="nsew")
+                    pass  # Row 8 is empty
                 
-                # Row 9: Navigation buttons (PREV/NEXT like project browser)
+                # Row 9: Navigation and action buttons (EXACT match to screen_browser.py)
                 elif r == 9:
                     if c == 0:
-                        # PREV button
+                        # PREVIOUS PAGE button
                         self.prev_button = tk.Label(
-                            cell, text="PREV",
-                            font=self.app.fonts.button,
-                            bg="black", fg="#ffffff",
+                            cell, text="◀ PREV",
+                            font=self.app.fonts.small,
+                            bg="#000000", fg="#ffffff",
                             cursor="hand2", bd=0, relief="flat"
                         )
                         self.prev_button.bind("<Button-1>", lambda e: self.prev_page())
-                        self.prev_button.pack(fill="both", expand=True, padx=20, pady=10)
-                    
+                        self.prev_button.pack(fill="both", expand=True)
                     elif c == 1:
-                        # NEXT button
+                        # NEXT PAGE button
                         self.next_button = tk.Label(
-                            cell, text="NEXT",
-                            font=self.app.fonts.button,
-                            bg="black", fg="#ffffff",
+                            cell, text="NEXT ▶",
+                            font=self.app.fonts.small,
+                            bg="#000000", fg="#ffffff",
                             cursor="hand2", bd=0, relief="flat"
                         )
                         self.next_button.bind("<Button-1>", lambda e: self.next_page())
-                        self.next_button.pack(fill="both", expand=True, padx=20, pady=10)
-                
-                # Row 10: Action button (IMPORT)
-                elif r == 10:
-                    if c == 0:
-                        # IMPORT button
+                        self.next_button.pack(fill="both", expand=True)
+                    elif c == 2:
+                        # Page indicator
+                        self.page_label = tk.Label(
+                            cell,
+                            text="1/1",
+                            bg="black", fg="#606060",
+                            anchor="center", padx=5, pady=0, bd=0, highlightthickness=0,
+                            font=self.app.fonts.small
+                        )
+                        self.page_label.pack(fill="both", expand=True)
+                    elif c == 7:
+                        # IMPORT button (rightmost, like LOAD in browser)
                         self.import_button = tk.Label(
                             cell, text="IMPORT",
-                            font=self.app.fonts.button,
-                            bg="black", fg="#303030",  # Disabled by default
+                            font=self.app.fonts.small,
+                            bg="#000000", fg="#303030",  # Start dark grey (disabled)
                             cursor="hand2", bd=0, relief="flat"
                         )
                         self.import_button.bind("<Button-1>", lambda e: self.import_project())
-                        self.import_button.pack(fill="both", expand=True, padx=20, pady=10)
+                        self.import_button.pack(fill="both", expand=True)
+                
+                # Row 10: Empty (8 columns)
+                elif r == 10:
+                    pass  # Row 10 is empty
             
             self.cell_frames.append(row_cells)
     
