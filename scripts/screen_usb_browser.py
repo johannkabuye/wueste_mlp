@@ -5,6 +5,7 @@ Exact match to project browser look and feel
 import tkinter as tk
 import os
 import shutil
+import json
 from datetime import datetime
 
 # Grid configuration (same as project browser)
@@ -29,6 +30,9 @@ class USBBrowserScreen(tk.Frame):
         self.current_page = 0
         self.total_pages = 0
         self.selected_project_index = None  # None = nothing selected
+        
+        # Metadata file path (for timestamp tracking)
+        self.metadata_file = None
         
         # UI references
         self.cell_frames = []
@@ -233,6 +237,10 @@ class USBBrowserScreen(tk.Frame):
     
     def on_show(self):
         """Called when screen becomes visible - scan USB"""
+        # Set metadata file path (points to my_projects metadata file)
+        my_projects_dir = os.path.join(self.app.molipe_root, "my_projects")
+        self.metadata_file = os.path.join(my_projects_dir, ".molipe_meta")
+        
         self.scan_usb()
         self.update_display()
     
@@ -508,6 +516,35 @@ class USBBrowserScreen(tk.Frame):
             timeout=10
         )
     
+    def load_metadata(self):
+        """Load metadata from .molipe_meta file (same as project browser)"""
+        if not self.metadata_file or not os.path.exists(self.metadata_file):
+            return {}
+        
+        try:
+            with open(self.metadata_file, 'r') as f:
+                return json.load(f)
+        except Exception as e:
+            print(f"Error loading metadata: {e}")
+            return {}
+    
+    def save_metadata(self, metadata):
+        """Save metadata to .molipe_meta file (same as project browser)"""
+        if not self.metadata_file:
+            return
+        
+        try:
+            with open(self.metadata_file, 'w') as f:
+                json.dump(metadata, f, indent=2)
+        except Exception as e:
+            print(f"Error saving metadata: {e}")
+    
+    def update_project_timestamp(self, project_name):
+        """Update timestamp for a project when it's imported (same as preset browser)"""
+        metadata = self.load_metadata()
+        metadata[project_name] = datetime.now().isoformat()
+        self.save_metadata(metadata)
+    
     def do_import(self, project_name, source_path):
         """Actually perform the import (copies entire folder)"""
         try:
@@ -515,22 +552,30 @@ class USBBrowserScreen(tk.Frame):
             target_dir = os.path.join(self.app.molipe_root, "my_projects")
             target_path = os.path.join(target_dir, project_name)
             
+            # Track the final name (may be renamed if conflict)
+            final_name = project_name
+            
             # Check if project already exists
             if os.path.exists(target_path):
                 # Generate new name with timestamp
                 timestamp = datetime.now().strftime("%Y%m%d-%H%M%S")
-                new_name = f"{project_name}-{timestamp}"
-                target_path = os.path.join(target_dir, new_name)
+                final_name = f"{project_name}-{timestamp}"
+                target_path = os.path.join(target_dir, final_name)
                 
-                print(f"Project exists, renaming to: {new_name}")
-                self.update_status(f"IMPORTING AS '{new_name}'...")
+                print(f"Project exists, renaming to: {final_name}")
+                self.update_status(f"IMPORTING AS '{final_name}'...")
             else:
                 self.update_status(f"IMPORTING '{project_name}'...")
             
             # Copy entire project folder (all files and subdirectories)
             shutil.copytree(source_path, target_path)
             
-            print(f"Import successful: {project_name}")
+            print(f"Import successful: {final_name}")
+            
+            # IMPORTANT: Update timestamp for the imported project (like preset browser)
+            self.update_project_timestamp(final_name)
+            print(f"✓ Timestamp updated for: {final_name}")
+            
             self.update_status("✓ IMPORTED")
             
             # Return to control panel after brief delay
