@@ -565,7 +565,6 @@ class PatchDisplayScreen(tk.Frame):
         
         # Loading state UI
         self._create_loading_ui()
-        self.dots_frame = 0
         self.loading_visible = False
         self.status_polling_id = None  # Track scheduled status polling
         
@@ -634,16 +633,6 @@ class PatchDisplayScreen(tk.Frame):
             bg="#000000"
         )
         self.loading_message.pack()
-        
-        # Animated stars
-        self.loading_dots_label = tk.Label(
-            self.loading_overlay,
-            text="Starts: ****",
-            font=("Sunflower", 24),
-            fg="#666666",
-            bg="#000000"
-        )
-        self.loading_dots_label.pack(pady=20)
     
     def _init_caches(self) -> None:
         self.last_text = [[None] * self.cols_per_row[r] for r in range(self.rows)]
@@ -1219,9 +1208,6 @@ class PatchDisplayScreen(tk.Frame):
         
         # Update message
         self.loading_message.config(text=message)
-        
-        # Animate stars (no animation - just show "Starts: ****")
-        self.loading_dots_label.config(text="Starts: ****")
     
     def show_normal_gui(self):
         """Hide loading overlay, show normal patch display"""
@@ -1242,7 +1228,6 @@ class PatchDisplayScreen(tk.Frame):
         
         self.loading_title.config(text="Connection Error", fg="#ff4444")
         self.loading_message.config(text=error_message)
-        self.loading_dots_label.pack_forget()
     
     def on_show(self):
         """

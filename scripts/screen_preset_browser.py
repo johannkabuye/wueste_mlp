@@ -497,16 +497,16 @@ class PresetBrowserScreen(tk.Frame):
                 # IMPORTANT: Update timestamp for the new project
                 self.after(0, lambda: self.update_project_timestamp(new_name))
                 
-                # Load the new project
+                # Load the new project (async - returns immediately)
                 new_project_path = os.path.join(my_projects_dir, new_name, "main.pd")
                 
                 if os.path.exists(new_project_path):
-                    if self.app.pd_manager.start_pd(new_project_path):
-                        # Switch to patch display
-                        self.after(500, lambda: self.app.show_screen('patch'))
-                    else:
-                        print("Failed to load new project")
-                        self.after(0, lambda: self.update_status("LOAD FAILED"))
+                    self.app.pd_manager.start_pd_async(new_project_path)
+                    # Switch to patch display immediately (will show loading screen)
+                    self.after(0, lambda: self.app.show_screen('patch'))
+                else:
+                    print("Failed to find new project main.pd")
+                    self.after(0, lambda: self.update_status("LOAD FAILED"))
             else:
                 print(f"✗ Start failed: {new_name}")
                 self.after(0, lambda: self.update_status("START FAILED"))
