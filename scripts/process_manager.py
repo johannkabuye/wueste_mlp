@@ -13,10 +13,86 @@ class ProcessManager:
         self.pd_process = None
         self.current_patch = None
     
+    def ensure_jack_midi_bridge(self):
+        """
+        Ensure JACK MIDI bridge (a2jmidid) is running
+        This is critical on Patchbox OS for MIDI to work
+        """
+        try:
+            # Check if a2jmidid is already running
+            result = subprocess.run(
+                ['pgrep', '-f', 'a2jmidid'],
+                capture_output=True
+            )
+            
+            if result.returncode == 0:
+                print("✓ JACK MIDI bridge already running")
+                return True
+            
+            # Not running - start it
+            print("Starting JACK MIDI bridge (a2jmidid)...")
+            subprocess.Popen(
+                ['a2jmidid', '-e'],  # -e = export hardware MIDI ports
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL
+            )
+            
+            # Give it time to start
+            time.sleep(1.0)
+            
+            # Verify it started
+            result = subprocess.run(
+                ['pgrep', '-f', 'a2jmidid'],
+                capture_output=True
+            )
+            
+            if result.returncode == 0:
+                print("✓ JACK MIDI bridge started")
+                return True
+            else:
+                print("⚠ Could not start JACK MIDI bridge")
+                return False
+                
+        except Exception as e:
+            print(f"⚠ Error managing JACK MIDI bridge: {e}")
+            return False
+    
+    def wait_for_jack_midi_ports(self, timeout=5):
+        """
+        Wait for JACK MIDI ports to be available
+        This is more reliable than checking ALSA alone
+        """
+        start_time = time.time()
+        
+        print("Waiting for JACK MIDI ports...")
+        
+        while (time.time() - start_time) < timeout:
+            try:
+                # Check for JACK MIDI ports
+                result = subprocess.run(
+                    ['jack_lsp'],
+                    capture_output=True,
+                    text=True,
+                    timeout=1
+                )
+                
+                # Look for 'midi' in port names
+                if 'midi' in result.stdout.lower():
+                    print("✓ JACK MIDI ports available")
+                    return True
+                    
+            except Exception:
+                pass
+            
+            time.sleep(0.3)
+        
+        print("⚠ JACK MIDI port timeout")
+        return False
+    
     def wait_for_midi_ready(self, timeout=3):
         """
-        Wait for MIDI devices to be available in ALSA
-        Returns True if MIDI is ready, False on timeout
+        Deprecated - use ensure_jack_midi_bridge + wait_for_jack_midi_ports
+        Kept for compatibility
         """
         start_time = time.time()
         
@@ -32,7 +108,7 @@ class ProcessManager:
                 
                 # If we see 'client' entries, MIDI devices are enumerated
                 if 'client' in result.stdout.lower():
-                    print("✓ MIDI devices ready")
+                    print("✓ ALSA MIDI devices ready")
                     return True
                     
             except Exception:
@@ -40,7 +116,7 @@ class ProcessManager:
             
             time.sleep(0.2)
         
-        print("⚠ MIDI timeout (continuing anyway)")
+        print("⚠ ALSA MIDI timeout (continuing anyway)")
         return False
     
     def start_pd(self, patch_path):
@@ -59,9 +135,23 @@ class ProcessManager:
             print(f"Killing existing Pure Data instances...")
             self.stop_pd()
             
-            # *** Wait for MIDI subsystem to be ready ***
-            print("Checking MIDI subsystem...")
+            # *** ROBUST MIDI INITIALIZATION SEQUENCE ***
+            print("\n=== MIDI Initialization ===")
+            
+            # Step 1: Ensure JACK MIDI bridge is running
+            self.ensure_jack_midi_bridge()
+            
+            # Step 2: Wait for ALSA MIDI devices
             self.wait_for_midi_ready(timeout=3)
+            
+            # Step 3: Wait for JACK MIDI ports (most important)
+            self.wait_for_jack_midi_ports(timeout=5)
+            
+            # Step 4: Extra safety delay
+            print("Additional MIDI stabilization delay...")
+            time.sleep(1.0)
+            
+            print("=== MIDI Ready ===\n")
             
             # Get project info
             project_dir = os.path.dirname(patch_path)
@@ -100,8 +190,9 @@ class ProcessManager:
                     bufsize=1
                 )
                 
-                # Give it time to fully initialize (especially MIDI)
-                time.sleep(1.5)
+                # Give Pure Data time to fully initialize MIDI
+                print("Waiting for Pure Data MIDI initialization...")
+                time.sleep(3.0)  # Increased from 1.5s - MIDI needs time!
                 
                 # Check if it's still running
                 if self.pd_process.poll() is not None:
@@ -113,6 +204,23 @@ class ProcessManager:
                 
                 print(f"Pure Data started! PID: {self.pd_process.pid}")
                 print(f"  - {project_patch} loaded")
+                
+                # Final verification: Check MIDI is still available
+                print("\nFinal MIDI verification...")
+                try:
+                    result = subprocess.run(
+                        ['jack_lsp'],
+                        capture_output=True,
+                        text=True,
+                        timeout=1
+                    )
+                    if 'midi' in result.stdout.lower():
+                        print("✓ MIDI confirmed available for Pure Data")
+                    else:
+                        print("⚠ WARNING: JACK MIDI ports not found after PD start!")
+                        print("⚠ If MIDI doesn't work, restart the project.")
+                except:
+                    print("⚠ Could not verify MIDI (JACK not responding)")
                 
             else:
                 # macOS - mock for testing
