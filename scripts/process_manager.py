@@ -184,11 +184,18 @@ class ProcessManager:
                 self.status_message = "Connecting MIDI inputs..."
                 self.connect_midi_to_puredata()
                 
-                # Step 8: Success!
+                # Step 8: Wait for patch to fully initialize
+                # The patch itself takes time to load (create objects, load samples, etc.)
+                # This is when CPU spikes to 350%+
+                self.status_message = "Initializing patch..."
+                print("Waiting for patch to fully initialize (5 seconds)...")
+                time.sleep(5.0)
+                
+                # Step 9: Success!
                 self.current_patch = patch_path
                 self.status = PDStatus.RUNNING
                 self.status_message = "Connected"
-                print("✓ Pure Data ready with MIDI connected!\n")
+                print("✓ Patch fully loaded and ready!\n")
                 
             else:
                 # macOS mock
