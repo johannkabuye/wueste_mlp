@@ -168,7 +168,19 @@ class PreferencesScreen(tk.Frame):
                 try:
                     # ULTRA-NUCLEAR OPTION: Handles ANY git state, ALWAYS overwrites
                     
-                    # Step 0: Verify remote is configured correctly
+                    # Step 0: Get current version BEFORE update
+                    print("Checking current version...")
+                    current_hash_result = subprocess.run(
+                        ["git", "rev-parse", "HEAD"],
+                        cwd=self.app.molipe_root,
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+                    current_hash = current_hash_result.stdout.strip() if current_hash_result.returncode == 0 else "unknown"
+                    print(f"Current version: {current_hash[:8]}")
+                    
+                    # Step 1: Verify remote is configured correctly
                     print("Checking remote configuration...")
                     remote_result = subprocess.run(
                         ["git", "remote", "get-url", "origin"],
@@ -195,7 +207,7 @@ class PreferencesScreen(tk.Frame):
                             timeout=5
                         )
                     
-                    # Step 1: Fetch all changes (longer timeout for slow connections)
+                    # Step 2: Fetch all changes (longer timeout for slow connections)
                     print("Fetching from GitHub...")
                     self.after(0, lambda: self.update_status("DOWNLOADING..."))
                     fetch_result = subprocess.run(
@@ -213,7 +225,28 @@ class PreferencesScreen(tk.Frame):
                         self.after(3000, lambda: self.app.show_screen('preferences'))
                         return
                     
-                    # Step 2: Checkout main branch (in case we're detached or on wrong branch)
+                    # Step 3: Get remote version AFTER fetch
+                    remote_hash_result = subprocess.run(
+                        ["git", "rev-parse", "origin/main"],
+                        cwd=self.app.molipe_root,
+                        capture_output=True,
+                        text=True,
+                        timeout=5
+                    )
+                    remote_hash = remote_hash_result.stdout.strip() if remote_hash_result.returncode == 0 else "unknown"
+                    print(f"Remote version: {remote_hash[:8]}")
+                    
+                    # Check if update is needed
+                    if current_hash == remote_hash and current_hash != "unknown":
+                        print("Already up to date!")
+                        self.after(0, lambda: self.update_status("ALREADY UP TO DATE"))
+                        self.updating = False
+                        self.after(3000, lambda: self.app.show_screen('preferences'))
+                        return
+                    
+                    print(f"Update available: {current_hash[:8]} → {remote_hash[:8]}")
+                    
+                    # Step 4: Checkout main branch (in case we're detached or on wrong branch)
                     print("Checking out main branch...")
                     subprocess.run(
                         ["git", "checkout", "-f", "main"],
@@ -222,7 +255,7 @@ class PreferencesScreen(tk.Frame):
                         timeout=5
                     )
                     
-                    # Step 3: HARD RESET to match GitHub exactly (discards ALL local changes)
+                    # Step 5: HARD RESET to match GitHub exactly (discards ALL local changes)
                     print("Hard resetting to origin/main...")
                     self.after(0, lambda: self.update_status("INSTALLING..."))
                     reset_result = subprocess.run(
@@ -240,7 +273,7 @@ class PreferencesScreen(tk.Frame):
                         self.after(3000, lambda: self.app.show_screen('preferences'))
                         return
                     
-                    # Step 4: Clean ALL untracked and ignored files (most aggressive)
+                    # Step 6: Clean ALL untracked and ignored files (most aggressive)
                     print("Cleaning untracked files...")
                     subprocess.run(
                         ["git", "clean", "-fdx"],  # -x removes ignored files too
@@ -250,18 +283,34 @@ class PreferencesScreen(tk.Frame):
                         timeout=10
                     )
                     
-                    # Step 5: Verify we're now at the latest commit
-                    print(f"Reset output: {reset_result.stdout}")
-                    
-                    # Always restart - even if "already up to date" (ensures clean state)
+                    # Step 7: Update complete - RESTART
+                    print(f"Update complete: {current_hash[:8]} → {remote_hash[:8]}")
                     self.after(0, lambda: self.update_status("RESTARTING..."))
-                    import time
-                    time.sleep(1)
                     
-                    # Restart Python process
-                    print("UPDATE COMPLETE - RESTARTING APP...")
-                    python = sys.executable
-                    os.execv(python, [python] + sys.argv)
+                    import time
+                    time.sleep(1.5)
+                    
+                    # Clean up Pure Data before restart
+                    self.app.pd_manager.cleanup()
+                    
+                    # Restart Python process (multiple methods for reliability)
+                    print("=== RESTARTING APPLICATION ===")
+                    print(f"Python: {sys.executable}")
+                    print(f"Args: {sys.argv}")
+                    
+                    # Method 1: Try execv (preferred)
+                    try:
+                        os.execv(sys.executable, [sys.executable] + sys.argv)
+                    except Exception as e1:
+                        print(f"execv failed: {e1}")
+                        # Method 2: Fallback to subprocess
+                        try:
+                            subprocess.Popen([sys.executable] + sys.argv)
+                            self.app.root.destroy()
+                        except Exception as e2:
+                            print(f"Subprocess restart failed: {e2}")
+                            # Give up and just show error
+                            self.after(0, lambda: self.update_status("RESTART FAILED - REBOOT SYSTEM", error=True))
                 
                 except subprocess.TimeoutExpired as e:
                     error_msg = f"TIMEOUT: {e.cmd[0] if e.cmd else 'git'}"
