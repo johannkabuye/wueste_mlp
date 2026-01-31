@@ -1016,8 +1016,8 @@
 #X text 1013 211 by stefan "ichabod";
 #X obj 538 912 t b b;
 #X obj 564 938 s \$0-loadbang;
-#X obj 129 130 hsl 128 15 0 127 0 1 \$0-decay1-s \$0-decay1-r DECAY1 133 7 0 10 #fcfcfc #000000 #000000 800 1;
-#X obj 132 158 hsl 128 15 0 127 0 1 \$0-decay2-s \$0-decay2-r DECAY2 133 7 0 10 #ffffff #000000 #000000 600 1;
+#X obj 129 130 hsl 128 15 0 127 0 1 \$0-decay1-s \$0-decay1-r DECAY1 133 7 0 10 #fcfcfc #000000 #000000 1300 1;
+#X obj 132 158 hsl 128 15 0 127 0 1 \$0-decay2-s \$0-decay2-r DECAY2 133 7 0 10 #ffffff #000000 #000000 6100 1;
 #N canvas 514 62 926 752 state-saving-multiple-instances 0;
 #X obj 469 -15 loadbang;
 #X obj 501 416 textfile;
@@ -1056,7 +1056,7 @@
 #X obj 501 294 t b f;
 #X obj 469 18 t b b b;
 #X obj 508 45 s update-path;
-#X msg 501 359 read /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/patch1/statesave/0-tom-ss.txt;
+#X msg 501 359 read /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/preset_projects/MOLIPE_DRUMS/statesave/0-tom-ss.txt;
 #X obj 387 37 bng 16 250 50 0 empty empty empty 0 -8 0 10 #fcfcfc #000000 #000000;
 #X obj 180 525 r patch-path;
 #X obj 135 544 pack f s;
@@ -2472,7 +2472,7 @@
 #X obj 50 570 / 127;
 #X obj 50 604 line~;
 #X obj 50 587 pack 0 2;
-#X obj 129 193 hsl 128 15 0 127 0 1 \$0-pitch-s \$0-pitch-r PITCH 133 7 0 10 #ffffff #000000 #000000 5600 1;
+#X obj 129 193 hsl 128 15 0 127 0 1 \$0-pitch-s \$0-pitch-r PITCH 133 7 0 10 #ffffff #000000 #000000 2000 1;
 #X obj 357 431 loadbang;
 #X msg 357 473 0.6;
 #X obj 735 289 / 127;
@@ -2746,6 +2746,8 @@
 #X obj 15 50 hradio 16 1 0 8 \$0-main-menu-s \$0-main-menu-r Main-Menu 0 -8 0 10 #fcfcfc #000000 #000000 0;
 #X obj 15 90 hradio 16 1 0 8 \$0-sub-menu-s \$0-sub-menu-r Sub-Menu 0 -8 0 10 #fcfcfc #000000 #000000 0;
 #X restore 505 627 pd \$0options;
+#X obj 226 645 dac~;
+#X msg 53 26 100 100;
 #X connect 1 0 22 0;
 #X connect 6 0 10 0;
 #X connect 7 0 10 1;
@@ -2771,6 +2773,8 @@
 #X connect 37 1 40 0;
 #X connect 38 0 13 0;
 #X connect 39 0 0 0;
+#X connect 39 0 80 0;
+#X connect 39 0 80 1;
 #X connect 40 0 42 0;
 #X connect 41 0 39 1;
 #X connect 42 0 41 0;
@@ -2807,4 +2811,5 @@
 #X connect 76 0 73 0;
 #X connect 76 1 71 0;
 #X connect 77 0 76 0;
+#X connect 81 0 36 0;
 #X coords 0 -1 1 1 220 160 1 100 100;

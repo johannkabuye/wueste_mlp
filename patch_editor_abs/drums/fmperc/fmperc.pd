@@ -258,11 +258,11 @@
 #X obj 1080 115 * 127;
 #X obj 1253 116 * 127;
 #X obj 1253 97 r \$0-e;
-#X obj 127 236 hsl 128 15 0 127 0 1 \$0-param-4-s \$0-param-4-r CRELEASE 133 7 0 10 #3a3a3a #000000 #000000 900 1;
-#X obj 127 174 hsl 128 15 0 127 0 1 \$0-param-2-s \$0-param-2-r FMOD 133 7 0 10 #00a078 #000000 #000000 4000 1;
+#X obj 127 236 hsl 128 15 0 127 0 1 \$0-param-4-s \$0-param-4-r CRELEASE 133 7 0 10 #3a3a3a #000000 #000000 7000 1;
+#X obj 127 174 hsl 128 15 0 127 0 1 \$0-param-2-s \$0-param-2-r FMOD 133 7 0 10 #00a078 #000000 #000000 11800 1;
 #X obj 127 267 hsl 128 15 0 127 0 1 \$0-param-5-s \$0-param-5-r MRELEASE 133 7 0 10 #505050 #000000 #000000 12700 1;
-#X obj 127 143 hsl 128 15 0 127 0 1 \$0-param-1-s \$0-param-1-r PITCH 133 7 0 10 #00c090 #000000 #000000 5600 1;
-#X obj 127 205 hsl 128 15 0 127 0 1 \$0-param-3-s \$0-param-3-r INDICE 133 7 0 10 #008068 #000000 #000000 9700 1;
+#X obj 127 143 hsl 128 15 0 127 0 1 \$0-param-1-s \$0-param-1-r PITCH 133 7 0 10 #00c090 #000000 #000000 5500 1;
+#X obj 127 205 hsl 128 15 0 127 0 1 \$0-param-3-s \$0-param-3-r INDICE 133 7 0 10 #008068 #000000 #000000 3600 1;
 #X obj 199 109 cnv 5 5 5 empty empty MOD1 0 0 0 8 #fcfcfc #404040 0;
 #X obj 298 108 cnv 5 5 5 empty empty MOD2 0 0 0 8 #fcfcfc #404040 0;
 #X obj 1322 98 inlet~;
@@ -271,7 +271,7 @@
 #X obj 1442 187 throw~ \$0-mod2;
 #X text 1320 81 MOD1;
 #X text 1440 81 MOD2;
-#X obj 127 158 hsl 61 8 0 127 0 1 \$0-param-9-s \$0-param-9-r empty 133 7 0 10 #606060 #000000 #000000 0 1;
+#X obj 127 158 hsl 61 8 0 127 0 1 \$0-param-9-s \$0-param-9-r empty 133 7 0 10 #606060 #000000 #000000 1400 1;
 #X obj 194 158 hsl 61 8 0 127 0 1 \$0-param-17-s \$0-param-17-r empty 133 7 0 10 #7c7c7c #000000 #000000 0 1;
 #X obj 127 189 hsl 61 8 0 127 0 1 \$0-param-10-s \$0-param-10-r empty 133 7 0 10 #606060 #000000 #000000 0 1;
 #X obj 194 189 hsl 61 8 0 127 0 1 \$0-param-18-s \$0-param-18-r empty 133 7 0 10 #7c7c7c #000000 #000000 0 1;
