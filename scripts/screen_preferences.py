@@ -79,11 +79,13 @@ class PreferencesScreen(tk.Frame):
                     menu_button.bind("<Button-1>", lambda e: self.on_menu_clicked())
                     menu_button.pack(fill="both", expand=True)
                 
-                # Row 0, Cell 3: Status label (upper right)
+                # Row 0, Cell 3: Status label (upper right) - shows connectivity status
                 elif r == 0 and c == 3:
+                    # Show initial connectivity status
+                    status_text = "READY" if self.app.has_internet else "OFFLINE MODE"
                     self.status_label = tk.Label(
                         cell,
-                        text="PREFERENCES",
+                        text=status_text,
                         bg="black", fg="#606060",
                         anchor="e", padx=10, pady=0, bd=0, highlightthickness=0,
                         font=self.app.fonts.status
@@ -169,7 +171,11 @@ class PreferencesScreen(tk.Frame):
             self._update_button_display()
             # Show error message
             self.update_status("GITHUB UNREACHABLE", error=True)
-            self.after(3000, lambda: self.update_status("PREFERENCES"))
+            # Return to connectivity status after 3 seconds
+            def restore_status():
+                status_text = "READY" if self.app.has_internet else "OFFLINE MODE"
+                self.update_status(status_text)
+            self.after(3000, restore_status)
             return
         
         def on_confirm_update():
@@ -397,4 +403,6 @@ class PreferencesScreen(tk.Frame):
     
     def on_show(self):
         """Called when this screen becomes visible"""
-        self.update_status("PREFERENCES")
+        # Show current connectivity status
+        status_text = "READY" if self.app.has_internet else "OFFLINE MODE"
+        self.update_status(status_text)

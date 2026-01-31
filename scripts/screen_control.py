@@ -253,11 +253,16 @@ class ControlScreen(tk.Frame):
                         status_text = "READY" if has_internet else "OFFLINE MODE"
                         self.after(0, lambda t=status_text: self.update_status(t))
                     
-                    # Update preferences screen UPDATE button
+                    # Update preferences screen UPDATE button AND status label
                     if 'preferences' in self.app.screens:
                         prefs = self.app.screens['preferences']
+                        # Update UPDATE button (grey out when offline)
                         if hasattr(prefs, '_update_button_display'):
                             prefs.after(0, prefs._update_button_display)
+                        # Update status label (show READY/OFFLINE MODE)
+                        if hasattr(prefs, 'update_status'):
+                            status_text = "READY" if has_internet else "OFFLINE MODE"
+                            prefs.after(0, lambda t=status_text: prefs.update_status(t))
                     
                     # Update browser screen buttons (if something is selected)
                     if 'browser' in self.app.screens:
