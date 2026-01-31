@@ -27,6 +27,7 @@ class PreferencesScreen(tk.Frame):
         # UI references
         self.cell_frames = []
         self.status_label = None
+        self.update_button_cell = None  # Track UPDATE button cell for dynamic updates
         
         self._build_ui()
     
@@ -93,24 +94,37 @@ class PreferencesScreen(tk.Frame):
                 # Row 1 (big font row): Main action buttons
                 elif r == 1:
                     if c == 0:
-                        # UPDATE button
-                        if self.app.has_internet:
-                            btn = self._create_big_button(cell, "UPDATE", self.update_molipe)
-                            btn.pack(fill="both", expand=True)
-                        else:
-                            lbl = tk.Label(
-                                cell, text="OFFLINE",
-                                font=self.app.fonts.big,
-                                bg="#000000", fg="#303030",
-                                bd=0, relief="flat"
-                            )
-                            lbl.pack(fill="both", expand=True)
+                        # UPDATE button - store cell reference for dynamic updates
+                        self.update_button_cell = cell
+                        self._update_button_display()
                     elif c == 1:
                         # EXIT TO DESKTOP button
                         btn = self._create_big_button(cell, "EXIT TO DESKTOP", self.exit_to_desktop)
                         btn.pack(fill="both", expand=True)
             
             self.cell_frames.append(row_cells)
+    
+    def _update_button_display(self):
+        """Update the UPDATE button based on current internet connectivity"""
+        if not self.update_button_cell:
+            return
+        
+        # Clear the cell
+        for widget in self.update_button_cell.winfo_children():
+            widget.destroy()
+        
+        # Show UPDATE button if online, OFFLINE label if not
+        if self.app.has_internet:
+            btn = self._create_big_button(self.update_button_cell, "UPDATE", self.update_molipe)
+            btn.pack(fill="both", expand=True)
+        else:
+            lbl = tk.Label(
+                self.update_button_cell, text="OFFLINE",
+                font=self.app.fonts.big,
+                bg="#000000", fg="#303030",
+                bd=0, relief="flat"
+            )
+            lbl.pack(fill="both", expand=True)
     
     def _create_big_button(self, parent, text, command):
         """Create a big button using BIG font (29pt)"""
@@ -142,7 +156,7 @@ class PreferencesScreen(tk.Frame):
         print(f"Preferences: {message}")
     
     def update_molipe(self):
-        """Update molipe from git and restart - NUCLEAR OPTION (always overwrites)"""
+        """Update molipe from git and restart - ULTRA-NUCLEAR OPTION"""
         if self.updating:
             return
         
@@ -152,26 +166,65 @@ class PreferencesScreen(tk.Frame):
             
             def do_update():
                 try:
-                    # NUCLEAR OPTION: Always succeeds, always overwrites everything
-                    # Step 1: Fetch all changes from GitHub
-                    print("Fetching from GitHub...")
-                    fetch_result = subprocess.run(
-                        ["git", "fetch", "--all"],
+                    # ULTRA-NUCLEAR OPTION: Handles ANY git state, ALWAYS overwrites
+                    
+                    # Step 0: Verify remote is configured correctly
+                    print("Checking remote configuration...")
+                    remote_result = subprocess.run(
+                        ["git", "remote", "get-url", "origin"],
                         cwd=self.app.molipe_root,
                         capture_output=True,
                         text=True,
-                        timeout=30
+                        timeout=5
+                    )
+                    
+                    if remote_result.returncode != 0 or "johannkabuye/molipe_01" not in remote_result.stdout:
+                        print("Remote not configured, setting it up...")
+                        # Remove old remote if exists
+                        subprocess.run(
+                            ["git", "remote", "remove", "origin"],
+                            cwd=self.app.molipe_root,
+                            capture_output=True,
+                            timeout=5
+                        )
+                        # Add correct remote
+                        subprocess.run(
+                            ["git", "remote", "add", "origin", "https://github.com/johannkabuye/molipe_01.git"],
+                            cwd=self.app.molipe_root,
+                            check=True,
+                            timeout=5
+                        )
+                    
+                    # Step 1: Fetch all changes (longer timeout for slow connections)
+                    print("Fetching from GitHub...")
+                    self.after(0, lambda: self.update_status("DOWNLOADING..."))
+                    fetch_result = subprocess.run(
+                        ["git", "fetch", "--all", "--prune"],
+                        cwd=self.app.molipe_root,
+                        capture_output=True,
+                        text=True,
+                        timeout=60  # Increased from 30s to 60s
                     )
                     
                     if fetch_result.returncode != 0:
                         print(f"Fetch error: {fetch_result.stderr}")
-                        self.after(0, lambda: self.update_status("FETCH FAILED", error=True))
+                        self.after(0, lambda: self.update_status("DOWNLOAD FAILED", error=True))
                         self.updating = False
-                        self.after(2000, lambda: self.app.show_screen('preferences'))
+                        self.after(3000, lambda: self.app.show_screen('preferences'))
                         return
                     
-                    # Step 2: HARD RESET to match GitHub exactly (discards ALL local changes)
+                    # Step 2: Checkout main branch (in case we're detached or on wrong branch)
+                    print("Checking out main branch...")
+                    subprocess.run(
+                        ["git", "checkout", "-f", "main"],
+                        cwd=self.app.molipe_root,
+                        capture_output=True,
+                        timeout=5
+                    )
+                    
+                    # Step 3: HARD RESET to match GitHub exactly (discards ALL local changes)
                     print("Hard resetting to origin/main...")
+                    self.after(0, lambda: self.update_status("INSTALLING..."))
                     reset_result = subprocess.run(
                         ["git", "reset", "--hard", "origin/main"],
                         cwd=self.app.molipe_root,
@@ -182,48 +235,49 @@ class PreferencesScreen(tk.Frame):
                     
                     if reset_result.returncode != 0:
                         print(f"Reset error: {reset_result.stderr}")
-                        self.after(0, lambda: self.update_status("RESET FAILED", error=True))
+                        self.after(0, lambda: self.update_status("INSTALL FAILED", error=True))
                         self.updating = False
-                        self.after(2000, lambda: self.app.show_screen('preferences'))
+                        self.after(3000, lambda: self.app.show_screen('preferences'))
                         return
                     
-                    # Step 3: Clean untracked files (optional but thorough)
+                    # Step 4: Clean ALL untracked and ignored files (most aggressive)
                     print("Cleaning untracked files...")
                     subprocess.run(
-                        ["git", "clean", "-fd"],
+                        ["git", "clean", "-fdx"],  # -x removes ignored files too
                         cwd=self.app.molipe_root,
                         capture_output=True,
                         text=True,
                         timeout=10
                     )
                     
-                    # Success! Check if anything changed
+                    # Step 5: Verify we're now at the latest commit
                     print(f"Reset output: {reset_result.stdout}")
                     
-                    if "HEAD is now at" in reset_result.stdout:
-                        # Files were updated - restart the app!
-                        self.after(0, lambda: self.update_status("RESTARTING..."))
-                        import time
-                        time.sleep(1)
-                        
-                        # Restart Python process
-                        print("UPDATE COMPLETE - RESTARTING APP...")
-                        python = sys.executable
-                        os.execv(python, [python] + sys.argv)
-                    else:
-                        # Already up to date
-                        self.after(0, lambda: self.update_status("ALREADY UP TO DATE"))
-                        self.updating = False
-                        self.after(2000, lambda: self.app.show_screen('preferences'))
+                    # Always restart - even if "already up to date" (ensures clean state)
+                    self.after(0, lambda: self.update_status("RESTARTING..."))
+                    import time
+                    time.sleep(1)
                     
+                    # Restart Python process
+                    print("UPDATE COMPLETE - RESTARTING APP...")
+                    python = sys.executable
+                    os.execv(python, [python] + sys.argv)
+                
+                except subprocess.TimeoutExpired as e:
+                    error_msg = f"TIMEOUT: {e.cmd[0] if e.cmd else 'git'}"
+                    print(f"Timeout error: {error_msg}")
+                    self.after(0, lambda msg=error_msg: self.update_status(msg, error=True))
+                    self.updating = False
+                    self.after(3000, lambda: self.app.show_screen('preferences'))
+                
                 except Exception as e:
-                    error_msg = str(e)
+                    error_msg = str(e)[:30]  # Truncate long errors
                     print(f"Update exception: {error_msg}")
                     import traceback
                     traceback.print_exc()
-                    self.after(0, lambda: self.update_status(f"ERROR: {error_msg}", error=True))
+                    self.after(0, lambda msg=error_msg: self.update_status(f"ERROR: {msg}", error=True))
                     self.updating = False
-                    self.after(2000, lambda: self.app.show_screen('preferences'))
+                    self.after(3000, lambda: self.app.show_screen('preferences'))
             
             threading.Thread(target=do_update, daemon=True).start()
         
@@ -273,12 +327,11 @@ class PreferencesScreen(tk.Frame):
         # Perform the check
         has_internet = self._check_internet()
         
-        # If connectivity changed, rebuild UI to show/hide UPDATE button
+        # If connectivity changed, update the UPDATE button
         if has_internet != self.app.has_internet:
             self.app.has_internet = has_internet
             print(f"Internet connectivity changed: {'ONLINE' if has_internet else 'OFFLINE'}")
-            self._build_ui()
-            self.update_status("PREFERENCES")  # Reset status after rebuild
+            self._update_button_display()
         
         # Schedule next check in 2 seconds
         self.connectivity_check_id = self.after(2000, self.check_connectivity_while_visible)
