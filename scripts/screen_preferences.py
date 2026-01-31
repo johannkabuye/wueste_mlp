@@ -19,7 +19,6 @@ class PreferencesScreen(tk.Frame):
         super().__init__(parent, bg="#000000")
         self.app = app
         self.updating = False
-        self.connectivity_check_id = None  # Track connectivity checking
         
         self.rows = DEFAULT_ROWS
         self.cols_per_row = list(COLS_PER_ROW)
@@ -148,7 +147,6 @@ class PreferencesScreen(tk.Frame):
     
     def on_menu_clicked(self):
         """Return to control panel"""
-        self.stop_connectivity_check()
         self.app.show_screen('control')
     
     def update_status(self, message, error=False):
@@ -378,35 +376,6 @@ class PreferencesScreen(tk.Frame):
             timeout=10
         )
     
-    def check_connectivity_while_visible(self):
-        """
-        Check GitHub connectivity every 1 second while preferences screen is visible
-        Only runs when this screen is active - more efficient than constant background checking
-        """
-        # Only check if this screen is currently visible
-        if self.app.current_screen != 'preferences':
-            print("Connectivity check stopped - not on preferences screen")
-            return
-        
-        # Perform the check
-        has_internet = self._check_internet()
-        print(f"Connectivity check: GitHub {'REACHABLE' if has_internet else 'UNREACHABLE'} (was: {'online' if self.app.has_internet else 'offline'})")
-        
-        # If connectivity changed, update the UPDATE button
-        if has_internet != self.app.has_internet:
-            self.app.has_internet = has_internet
-            print(f"âš¡ GitHub connectivity CHANGED: {'ONLINE' if has_internet else 'OFFLINE'}")
-            self._update_button_display()
-        
-        # Schedule next check in 1 second (faster detection)
-        self.connectivity_check_id = self.after(1000, self.check_connectivity_while_visible)
-    
-    def stop_connectivity_check(self):
-        """Stop the connectivity checking loop"""
-        if self.connectivity_check_id:
-            self.after_cancel(self.connectivity_check_id)
-            self.connectivity_check_id = None
-    
     def _check_internet(self):
         """
         Check if GitHub is reachable (not just generic internet)
@@ -428,8 +397,4 @@ class PreferencesScreen(tk.Frame):
     
     def on_show(self):
         """Called when this screen becomes visible"""
-        print("Preferences screen shown - starting connectivity monitoring")
         self.update_status("PREFERENCES")
-        
-        # Start connectivity checking (only while this screen is visible)
-        self.check_connectivity_while_visible()

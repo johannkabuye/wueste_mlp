@@ -32,6 +32,9 @@ class ControlScreen(tk.Frame):
         self.cell_frames = []
         
         self._build_ui()
+        
+        # Start background connectivity monitoring (runs continuously)
+        self.start_background_connectivity_monitoring()
     
     def _build_ui(self):
         """Build grid-based control panel"""
@@ -228,6 +231,45 @@ class ControlScreen(tk.Frame):
             return result == 0
         except Exception:
             return False
+    
+    def start_background_connectivity_monitoring(self):
+        """
+        Start background thread that continuously monitors GitHub connectivity
+        Updates all screens when connectivity changes
+        """
+        def monitor():
+            import time
+            while True:
+                time.sleep(2)  # Check every 2 seconds (faster than old 10 seconds)
+                
+                has_internet = self.check_internet()
+                
+                if has_internet != self.app.has_internet:
+                    self.app.has_internet = has_internet
+                    print(f"⚡ GitHub connectivity CHANGED: {'ONLINE' if has_internet else 'OFFLINE'}")
+                    
+                    # Update control panel status (if visible)
+                    if self.app.current_screen == 'control':
+                        status_text = "READY" if has_internet else "OFFLINE MODE"
+                        self.after(0, lambda t=status_text: self.update_status(t))
+                    
+                    # Update preferences screen UPDATE button
+                    if 'preferences' in self.app.screens:
+                        prefs = self.app.screens['preferences']
+                        if hasattr(prefs, '_update_button_display'):
+                            prefs.after(0, prefs._update_button_display)
+                    
+                    # Update browser screen buttons (if something is selected)
+                    if 'browser' in self.app.screens:
+                        browser = self.app.screens['browser']
+                        if hasattr(browser, 'selected_project_index') and browser.selected_project_index is not None:
+                            if hasattr(browser, 'update_action_buttons'):
+                                browser.after(0, browser.update_action_buttons)
+        
+        # Start background thread
+        thread = threading.Thread(target=monitor, daemon=True)
+        thread.start()
+        print("Background connectivity monitoring started")
     
     def shutdown(self):
         """Shutdown the system"""
