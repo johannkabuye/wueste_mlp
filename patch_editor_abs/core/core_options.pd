@@ -11,6 +11,8 @@
 #X obj 338 23 loadbang;
 #X obj 338 85 f \$4;
 #X obj 375 83 f \$3;
+#X obj 195 47 loadbang;
+#X msg 195 68 0;
 #X connect 0 0 10 0;
 #X connect 1 0 5 0;
 #X connect 5 0 3 0;
@@ -21,4 +23,6 @@
 #X connect 9 0 6 0;
 #X connect 10 0 1 0;
 #X connect 11 0 7 0;
+#X connect 12 0 13 0;
+#X connect 13 0 2 0;
 #X coords 0 459 1 458 220 120 0;
