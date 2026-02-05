@@ -186,8 +186,33 @@ class PreferencesScreen(tk.Frame):
                 try:
                     # ULTRA-NUCLEAR OPTION: Handles ANY git state, ALWAYS overwrites
                     
-                    # Step 0: Get current version BEFORE update
+                    # Step 0a: Fix file permissions (in case app was run with sudo before)
+                    print("Fixing file permissions...")
+                    self.after(0, lambda: self.update_status("FIXING PERMISSIONS..."))
+                    
+                    # Get current user
+                    import pwd
+                    current_user = pwd.getpwuid(os.getuid()).pw_name
+                    print(f"Current user: {current_user}")
+                    
+                    # Fix ownership of entire molipe_01 directory
+                    # This allows git operations to work without sudo
+                    chown_result = subprocess.run(
+                        ["sudo", "chown", "-R", f"{current_user}:{current_user}", self.app.molipe_root],
+                        capture_output=True,
+                        text=True,
+                        timeout=30
+                    )
+                    
+                    if chown_result.returncode != 0:
+                        print(f"Warning: Could not fix permissions: {chown_result.stderr}")
+                        # Continue anyway - might still work
+                    else:
+                        print("✓ Permissions fixed")
+                    
+                    # Step 0b: Get current version BEFORE update
                     print("Checking current version...")
+                    self.after(0, lambda: self.update_status("CHECKING VERSION..."))
                     current_hash_result = subprocess.run(
                         ["git", "rev-parse", "HEAD"],
                         cwd=self.app.molipe_root,
@@ -237,10 +262,18 @@ class PreferencesScreen(tk.Frame):
                     )
                     
                     if fetch_result.returncode != 0:
-                        print(f"Fetch error: {fetch_result.stderr}")
-                        self.after(0, lambda: self.update_status("DOWNLOAD FAILED", error=True))
+                        error_msg = fetch_result.stderr.strip()
+                        print(f"Fetch error: {error_msg}")
+                        
+                        # Show helpful error message
+                        if "Permission denied" in error_msg or "permission" in error_msg.lower():
+                            self.after(0, lambda: self.update_status("PERMISSION ERROR", error=True))
+                            print("TIP: Try running: sudo chown -R patch:patch /home/patch/Desktop/molipe_01")
+                        else:
+                            self.after(0, lambda: self.update_status("DOWNLOAD FAILED", error=True))
+                        
                         self.updating = False
-                        self.after(3000, lambda: self.app.show_screen('preferences'))
+                        self.after(5000, lambda: self.update_status("READY" if self.app.has_internet else "OFFLINE MODE"))
                         return
                     
                     # Step 3: Get remote version AFTER fetch
@@ -259,7 +292,7 @@ class PreferencesScreen(tk.Frame):
                         print("Already up to date!")
                         self.after(0, lambda: self.update_status("ALREADY UP TO DATE"))
                         self.updating = False
-                        self.after(3000, lambda: self.app.show_screen('preferences'))
+                        self.after(3000, lambda: self.update_status("READY" if self.app.has_internet else "OFFLINE MODE"))
                         return
                     
                     print(f"Update available: {current_hash[:8]} → {remote_hash[:8]}")
@@ -285,10 +318,18 @@ class PreferencesScreen(tk.Frame):
                     )
                     
                     if reset_result.returncode != 0:
-                        print(f"Reset error: {reset_result.stderr}")
-                        self.after(0, lambda: self.update_status("INSTALL FAILED", error=True))
+                        error_msg = reset_result.stderr.strip()
+                        print(f"Reset error: {error_msg}")
+                        
+                        # Show helpful error message
+                        if "Permission denied" in error_msg or "permission" in error_msg.lower():
+                            self.after(0, lambda: self.update_status("PERMISSION ERROR", error=True))
+                            print("TIP: Try running: sudo chown -R patch:patch /home/patch/Desktop/molipe_01")
+                        else:
+                            self.after(0, lambda: self.update_status("INSTALL FAILED", error=True))
+                        
                         self.updating = False
-                        self.after(3000, lambda: self.app.show_screen('preferences'))
+                        self.after(5000, lambda: self.update_status("READY" if self.app.has_internet else "OFFLINE MODE"))
                         return
                     
                     # Step 6: Clean ALL untracked and ignored files (most aggressive)
@@ -335,7 +376,7 @@ class PreferencesScreen(tk.Frame):
                     print(f"Timeout error: {error_msg}")
                     self.after(0, lambda msg=error_msg: self.update_status(msg, error=True))
                     self.updating = False
-                    self.after(3000, lambda: self.app.show_screen('preferences'))
+                    self.after(5000, lambda: self.update_status("READY" if self.app.has_internet else "OFFLINE MODE"))
                 
                 except Exception as e:
                     error_msg = str(e)[:30]  # Truncate long errors
@@ -344,7 +385,7 @@ class PreferencesScreen(tk.Frame):
                     traceback.print_exc()
                     self.after(0, lambda msg=error_msg: self.update_status(f"ERROR: {msg}", error=True))
                     self.updating = False
-                    self.after(3000, lambda: self.app.show_screen('preferences'))
+                    self.after(5000, lambda: self.update_status("READY" if self.app.has_internet else "OFFLINE MODE"))
             
             threading.Thread(target=do_update, daemon=True).start()
         
