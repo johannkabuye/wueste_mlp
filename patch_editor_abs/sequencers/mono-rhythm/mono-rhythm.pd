@@ -1897,7 +1897,7 @@
 #X obj 124 148 r patch-path;
 #X msg 36 269 write /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/preset_projects/MOLIPE_DRUMS/statesave/patterns/7mono-rhythm-patterns.txt 7362-pattern, f 31;
 #X obj 447 61 s update-path;
-#X msg 408 281 read -ascii -resize /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/preset_projects/MOLIPE_DRUMS/statesave/patterns/3mono-rhythm-patterns.txt 5740-pattern, f 34;
+#X msg 408 281 read -ascii -resize /Users/johannklug/Documents/Bass\ Dieter/2025/Diet/MODULAR_LIVE_\ PERFORMER/preset_projects/MOLIPE_DRUMS/statesave/patterns/3mono-rhythm-patterns.txt 1075-pattern, f 34;
 #X obj 430 169 pack f f f s;
 #X obj 499 148 r patch-path;
 #X text 767 6 Not done:;
@@ -1966,8 +1966,8 @@
 #X obj 909 164 s \$0-clock-in-r;
 #X obj 1113 158 s \$0reset-clock-gui-r;
 #X obj -216 587 s \$0-set-pattern-pos-r;
-#X obj 260 284 cnv 5 5 5 empty empty PATTERN 0 0 0 8 #fcfcfc #000000 0;
-#X obj 134 276 hradio 15 1 0 8 \$0-diet-drum-seq-pattern-s \$0-diet-drum-seq-pattern-r empty 0 -8 0 10 #00eef9 #000000 #000000 0;
+#X obj 272 284 cnv 5 5 5 empty empty PATTERN 0 0 0 8 #fcfcfc #000000 0;
+#X obj 109 278 hradio 10 1 0 16 \$0-diet-drum-seq-pattern-s \$0-diet-drum-seq-pattern-r empty 0 -8 0 10 #00eef9 #000000 #000000 0;
 #X obj 134 254 hradio 15 1 0 4 \$0-set-pattern-pos \$0-set-pattern-pos-r empty 0 -8 0 10 #fcfcfc #000000 #000000 0;
 #X text -216 410 LOAD STARTUP GUI;
 #X text 103 606 Reads and writes pattern \; length:;
@@ -2074,7 +2074,7 @@
 #X obj 746 124 t f b;
 #X floatatom 746 104 5 0 0 0 - - - 0;
 #X obj 791 140 f \$0;
-#X msg 747 205 5740-pattern-groove1;
+#X msg 747 205 1075-pattern-groove1;
 #X connect 0 0 6 0;
 #X connect 2 0 4 0;
 #X connect 4 0 3 0;
