@@ -249,22 +249,45 @@ class PreferencesScreen(tk.Frame):
                         timeout=5
                     )
                     
-                    if remote_result.returncode != 0 or "johannkabuye/molipe_01" not in remote_result.stdout:
-                        print("Remote not configured, setting it up...")
-                        # Remove old remote if exists
-                        subprocess.run(
-                            ["git", "remote", "remove", "origin"],
-                            cwd=self.app.molipe_root,
-                            capture_output=True,
-                            timeout=5
-                        )
-                        # Add correct remote
-                        subprocess.run(
-                            ["git", "remote", "add", "origin", "https://github.com/johannkabuye/molipe_01.git"],
-                            cwd=self.app.molipe_root,
-                            check=True,
-                            timeout=5
-                        )
+                    correct_url = "https://github.com/johannkabuye/molipe_01.git"
+                    
+                    if remote_result.returncode != 0:
+                        # Remote doesn't exist - add it
+                        print("Remote 'origin' not found - adding it...")
+                        try:
+                            subprocess.run(
+                                ["git", "remote", "add", "origin", correct_url],
+                                cwd=self.app.molipe_root,
+                                capture_output=True,
+                                text=True,
+                                check=True,
+                                timeout=5
+                            )
+                            print("✓ Remote added")
+                        except subprocess.CalledProcessError as e:
+                            print(f"Failed to add remote: {e.stderr}")
+                            # Continue anyway - might still work
+                    
+                    elif "johannkabuye/molipe_01" not in remote_result.stdout:
+                        # Remote exists but wrong URL - update it
+                        print(f"Remote URL incorrect: {remote_result.stdout.strip()}")
+                        print("Updating remote URL...")
+                        try:
+                            subprocess.run(
+                                ["git", "remote", "set-url", "origin", correct_url],
+                                cwd=self.app.molipe_root,
+                                capture_output=True,
+                                text=True,
+                                check=True,
+                                timeout=5
+                            )
+                            print("✓ Remote URL updated")
+                        except subprocess.CalledProcessError as e:
+                            print(f"Failed to update remote: {e.stderr}")
+                            # Continue anyway
+                    
+                    else:
+                        print(f"✓ Remote correctly configured: {remote_result.stdout.strip()}")
                     
                     # Step 2: Fetch all changes (longer timeout for slow connections)
                     print("Fetching from GitHub...")
@@ -395,11 +418,13 @@ class PreferencesScreen(tk.Frame):
                     self.after(5000, lambda: self.update_status("READY" if self.app.has_internet else "OFFLINE MODE"))
                 
                 except Exception as e:
-                    error_msg = str(e)[:30]  # Truncate long errors
+                    error_msg = str(e)  # Show full error (don't truncate)
                     print(f"Update exception: {error_msg}")
                     import traceback
                     traceback.print_exc()
-                    self.after(0, lambda msg=error_msg: self.update_status(f"ERROR: {msg}", error=True))
+                    # Truncate only for display in status (but show full in console)
+                    display_msg = error_msg[:50] if len(error_msg) > 50 else error_msg
+                    self.after(0, lambda msg=display_msg: self.update_status(f"ERROR: {msg}", error=True))
                     self.updating = False
                     self.after(5000, lambda: self.update_status("READY" if self.app.has_internet else "OFFLINE MODE"))
             
