@@ -7776,7 +7776,7 @@
 #X obj 666 899 cmbcym 1 2 4;
 #X obj 887 897 perk-clap-mod 1 2 5;
 #X obj 1112 897 mymembrane 2 2 6;
-#X obj 1339 901 mymembrane 3 2 7;
+#X obj 1341 901 mymembrane 3 2 7;
 #X obj 3 1191 channel 1 5 1;
 #X obj 223 1191 channel 2 5 2;
 #X obj 446 1192 channel 3 5 3;
@@ -7794,6 +7794,18 @@
 #X obj 1349 1500 diet-audio-to-mixer 41 8 7;
 #X obj 1572 1500 diet-audio-to-mixer 40 8 8;
 #X obj 1571 1193 millerverb 3 6 8;
+#X obj 1341 531 basic-lfo 11 3 7;
+#X obj 1342 710 basic-lfo 11 4 7;
+#N canvas 92 117 450 300 performer 0;
+#X obj 197 187 tgl 15 0 \$0-stutter-on-off \$0-stutter-on-off-r empty 0 -8 0 10 #fcfcfc #000000 #000000 0 1;
+#X obj 137 187 hradio 15 1 0 4 \$0-diet-drum-seq-stutter-length-s \$0-diet-drum-seq-stutter-length-r empty 0 -8 0 10 #ff5368 #000000 #000000 0;
+#X obj 217 195 cnv 5 5 5 empty empty STUTTER 0 0 0 8 #fcfcfc #000000 0;
+#X obj 196 237 s global-stutter-on/off;
+#X obj 136 268 s global-stutter;
+#X connect 0 0 3 0;
+#X connect 1 0 4 0;
+#X coords 0 -1 1 1 220 320 1 100 100;
+#X restore 1796 369 pd performer;
 #X connect 0 0 52 0;
 #X connect 1 0 43 0;
 #X connect 2 0 3 0;
@@ -7860,3 +7872,5 @@
 #X connect 43 1 51 0;
 #X connect 52 0 50 0;
 #X connect 52 1 51 0;
+#X connect 53 0 35 1;
+#X connect 54 0 35 2;
