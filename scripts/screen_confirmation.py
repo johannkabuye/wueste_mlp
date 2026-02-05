@@ -176,8 +176,8 @@ class ConfirmationScreen(tk.Frame):
         if self.on_yes_callback:
             self.on_yes_callback()
         
-        # Return to previous screen (callback handles this now)
-        # self.app.show_screen(self.return_screen)
+        # Return to previous screen
+        self.app.show_screen(self.return_screen)
     
     def _on_no(self):
         """NO button clicked or ESC pressed"""

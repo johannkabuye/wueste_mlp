@@ -179,36 +179,52 @@ class PreferencesScreen(tk.Frame):
             return
         
         def on_confirm_update():
+            print("=== UPDATE CONFIRMED - Starting update process ===")
             self.updating = True
             self.update_status("UPDATING...")
             
             def do_update():
                 try:
+                    print("=== UPDATE THREAD STARTED ===")
                     # ULTRA-NUCLEAR OPTION: Handles ANY git state, ALWAYS overwrites
                     
-                    # Step 0a: Fix file permissions (in case app was run with sudo before)
-                    print("Fixing file permissions...")
-                    self.after(0, lambda: self.update_status("FIXING PERMISSIONS..."))
+                    # Step 0a: Check if we need to fix permissions
+                    # Skip sudo chown if it might hang (no password-less sudo configured)
+                    print("Checking file permissions...")
                     
-                    # Get current user
-                    import pwd
-                    current_user = pwd.getpwuid(os.getuid()).pw_name
-                    print(f"Current user: {current_user}")
-                    
-                    # Fix ownership of entire molipe_01 directory
-                    # This allows git operations to work without sudo
-                    chown_result = subprocess.run(
-                        ["sudo", "chown", "-R", f"{current_user}:{current_user}", self.app.molipe_root],
-                        capture_output=True,
-                        text=True,
-                        timeout=30
-                    )
-                    
-                    if chown_result.returncode != 0:
-                        print(f"Warning: Could not fix permissions: {chown_result.stderr}")
-                        # Continue anyway - might still work
-                    else:
-                        print("✓ Permissions fixed")
+                    # Quick test: can we write to molipe_root?
+                    test_file = os.path.join(self.app.molipe_root, ".write_test")
+                    try:
+                        with open(test_file, 'w') as f:
+                            f.write("test")
+                        os.remove(test_file)
+                        print("✓ Write access OK - no permission fix needed")
+                    except PermissionError:
+                        print("⚠ No write access - attempting permission fix...")
+                        self.after(0, lambda: self.update_status("FIXING PERMISSIONS..."))
+                        
+                        # Try to fix permissions (may fail if sudo requires password)
+                        import pwd
+                        current_user = pwd.getpwuid(os.getuid()).pw_name
+                        print(f"Attempting: sudo chown -R {current_user}:{current_user} {self.app.molipe_root}")
+                        
+                        try:
+                            chown_result = subprocess.run(
+                                ["sudo", "-n", "chown", "-R", f"{current_user}:{current_user}", self.app.molipe_root],
+                                capture_output=True,
+                                text=True,
+                                timeout=5  # Shorter timeout
+                            )
+                            
+                            if chown_result.returncode != 0:
+                                print(f"Permission fix failed: {chown_result.stderr}")
+                                print("Continuing anyway - update may fail...")
+                            else:
+                                print("✓ Permissions fixed")
+                        except subprocess.TimeoutExpired:
+                            print("Permission fix timed out - continuing anyway")
+                        except Exception as e:
+                            print(f"Permission fix error: {e} - continuing anyway")
                     
                     # Step 0b: Get current version BEFORE update
                     print("Checking current version...")
@@ -388,6 +404,7 @@ class PreferencesScreen(tk.Frame):
                     self.after(5000, lambda: self.update_status("READY" if self.app.has_internet else "OFFLINE MODE"))
             
             threading.Thread(target=do_update, daemon=True).start()
+            print("=== UPDATE THREAD LAUNCHED ===")
         
         self.app.show_confirmation(
             message="Update Molipe from GitHub?\n\nThis will restart Molipe and stop\nany open project.",
