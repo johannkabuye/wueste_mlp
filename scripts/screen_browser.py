@@ -857,8 +857,6 @@ class BrowserScreen(tk.Frame):
             return_screen='browser',
             timeout=10
         )
-        
-        threading.Thread(target=do_delete, daemon=True).start()
     
     def show_sync_status(self, message, error=False, syncing=False, duration=None):
         """Show sync status in upper right corner"""
