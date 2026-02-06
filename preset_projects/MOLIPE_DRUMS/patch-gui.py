@@ -533,6 +533,8 @@ class PatchDisplayScreen(tk.Frame):
         self.udp_queue = Queue()
         self.metrics = PerformanceMetrics()
         self.udp_thread = None
+        self.udp_stop_flag = False  # Flag to stop UDP thread
+        self.udp_socket = None  # Store socket reference for cleanup
         
         self.vars: List[List[tk.StringVar]] = []
         self.labels: List[List[tk.Label]] = []
@@ -796,6 +798,7 @@ class PatchDisplayScreen(tk.Frame):
         
         def listener_loop():
             sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            self.udp_socket = sock  # Store reference for cleanup
             
             try:
                 sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, SOCKET_BUFFER_SIZE)
@@ -815,9 +818,10 @@ class PatchDisplayScreen(tk.Frame):
             except OSError as e:
                 print(f"ERROR: Could not bind UDP socket: {e}")
                 print(f"Port {PORT} may already be in use by another patch screen")
+                self.udp_socket = None
                 return
             
-            while True:
+            while not self.udp_stop_flag:  # Check stop flag
                 try:
                     data, addr = sock.recvfrom(16384)
                     self.metrics.update_received()
@@ -830,9 +834,19 @@ class PatchDisplayScreen(tk.Frame):
                         self.metrics.update_processed()
                 
                 except socket.timeout:
-                    continue
+                    continue  # Timeout is normal, keep checking stop flag
                 except Exception:
-                    continue
+                    if not self.udp_stop_flag:  # Only log if not intentionally stopped
+                        continue
+            
+            # Clean shutdown
+            print("UDP listener stopping...")
+            try:
+                sock.close()
+            except:
+                pass
+            self.udp_socket = None
+            print("UDP listener stopped")
         
         self.udp_thread = threading.Thread(target=listener_loop, daemon=True, name="UDPListener")
         self.udp_thread.start()
@@ -1262,11 +1276,25 @@ class PatchDisplayScreen(tk.Frame):
             self.after_cancel(self.status_polling_id)
             self.status_polling_id = None
         
-        # Stop UDP listener thread (it will exit when it can't bind)
-        # The thread is daemon so it will die when the screen is destroyed
-        # But we need to make sure the socket is closed first
+        # Stop UDP listener thread
+        print("Stopping UDP listener...")
+        self.udp_stop_flag = True  # Signal thread to stop
+        
+        # Close socket to unblock recvfrom
+        if self.udp_socket:
+            try:
+                self.udp_socket.close()
+                print("UDP socket closed")
+            except:
+                pass
+        
+        # Wait briefly for thread to exit
         if self.udp_thread and self.udp_thread.is_alive():
-            print("UDP thread still running - it will clean up on next bind attempt")
+            self.udp_thread.join(timeout=2.0)
+            if self.udp_thread.is_alive():
+                print("Warning: UDP thread did not stop cleanly")
+            else:
+                print("UDP thread stopped cleanly")
         
         print("Patch display cleanup complete")
     
