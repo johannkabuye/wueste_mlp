@@ -779,7 +779,7 @@ class BrowserScreen(tk.Frame):
             self.app.show_confirmation(
                 message=f"Close '{current_name}' and load\n'{new_name}'?",
                 on_yes=do_load,
-                return_screen='browser',
+                return_screen='patch',  # Return to patch screen, not browser!
                 timeout=10
             )
         else:
