@@ -688,10 +688,14 @@ class BrowserScreen(tk.Frame):
                     gui_module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(gui_module)
                     
-                    # Destroy old patch screen if it exists
+                    # CRITICAL: Destroy and recreate patch screen properly
                     if 'patch' in self.app.screens:
                         old_screen = self.app.screens['patch']
+                        # Unpack first (if it's currently showing)
+                        old_screen.pack_forget()
+                        # Then destroy
                         old_screen.destroy()
+                        print("Destroyed old patch screen")
                     
                     # Create new GUI instance (assumes class is named PatchDisplayScreen)
                     new_gui = gui_module.PatchDisplayScreen(self.app.root, self.app)
@@ -706,7 +710,7 @@ class BrowserScreen(tk.Frame):
                     # Fallback to default if custom GUI fails
                     # (but this shouldn't happen if patch-gui.py is required)
             
-            # Switch to patch display immediately (will show loading state)
+            # Switch to patch display (show_screen will pack it)
             self.app.show_screen('patch')
         
         # CHECK IF PATCH IS ALREADY RUNNING
