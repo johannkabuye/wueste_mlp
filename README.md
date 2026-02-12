@@ -1,7 +1,7 @@
-# molipe_01
+# wueste_01
 
-Welcome to Molipe (Modular Live Performer)
-Molipe is a modular environment for live improvisation in electronic music. Built with Pure Data and Python, it runs on a Raspberry Pi 5 with a dedicated controller — but it is fully cross-platform and works on any operating system.
+Welcome to wueste MLP (Modular Live Performer)
+MLP is a modular environment for live improvisation in electronic music. Built with Pure Data and Python, it runs on a Raspberry Pi 5 with a dedicated controller — but it is fully cross-platform and works on any operating system.
 
 To run Molipe, please download and install Pure Data (Vanilla):
 https://puredata.info/downloads/pure-data
