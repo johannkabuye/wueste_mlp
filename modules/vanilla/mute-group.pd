@@ -119,9 +119,9 @@
 #X obj 1207 377 core_mod_display \$0;
 #X obj 1207 357 core_options \$0 \$1 \$2 \$3;
 #X obj 1207 338 core_state_saving \$0 \$1 \$2 \$3;
-#X obj 448 124 tgl 15 1 \$0-param-1-s \$0-param-1-r PTRN-LTH 17 7 0 10 #8f5adf #000000 #000000 0 1;
-#X obj 463 124 tgl 15 1 \$0-param-2-s \$0-param-2-r OFFSET 17 7 0 10 #a86ada #000000 #000000 0 1;
-#X obj 478 124 tgl 15 1 \$0-param-3-s \$0-param-3-r RND-VEL 17 7 0 10 #c07cd2 #000000 #000000 0 1;
+#X obj 448 124 tgl 15 1 \$0-param-1-s \$0-param-1-r - 17 7 0 10 #8f5adf #000000 #000000 0 1;
+#X obj 463 124 tgl 15 1 \$0-param-2-s \$0-param-2-r - 17 7 0 10 #a86ada #000000 #000000 0 1;
+#X obj 478 124 tgl 15 1 \$0-param-3-s \$0-param-3-r - 17 7 0 10 #c07cd2 #000000 #000000 0 1;
 #X obj 493 124 tgl 15 1 \$0-param-4-s \$0-param-4-r - 17 7 0 10 #d48dc1 #000000 #000000 0 1;
 #X connect 1 0 77 0;
 #X connect 2 0 78 0;
@@ -183,6 +183,10 @@
 #X connect 60 0 42 0;
 #X connect 61 0 48 0;
 #X connect 62 0 54 0;
+#X connect 71 0 116 0;
+#X connect 72 0 117 0;
+#X connect 81 0 118 0;
+#X connect 82 0 119 0;
 #X connect 83 0 1 0;
 #X connect 84 0 2 0;
 #X connect 85 0 3 0;
@@ -195,4 +199,8 @@
 #X connect 111 5 99 0;
 #X connect 111 6 100 0;
 #X connect 111 7 101 0;
+#X connect 116 0 73 0;
+#X connect 117 0 74 0;
+#X connect 118 0 75 0;
+#X connect 119 0 76 0;
 #X coords 0 -1 1 1 1780 50 1 100 100;
