@@ -124,7 +124,7 @@ class MIDISetupScreen(tk.Frame):
                         clear_btn = tk.Label(
                             cell,
                             text="CLEAR",
-                            font=self.app.fonts.medium,
+                            font=self.app.fonts.big,
                             bg="#2c2c2c", fg="#ffffff",
                             cursor="hand2", bd=0, relief="flat"
                         )
@@ -136,7 +136,7 @@ class MIDISetupScreen(tk.Frame):
                         set_btn = tk.Label(
                             cell,
                             text="SET",
-                            font=self.app.fonts.medium,
+                            font=self.app.fonts.big,
                             bg="#cc5500", fg="#ffffff",
                             cursor="hand2", bd=0, relief="flat"
                         )
