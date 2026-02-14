@@ -41,19 +41,30 @@ class MIDIDeviceManager:
         """
         try:
             # Run amidiminder to detect ports
-            # Use timeout to prevent hanging
-            result = subprocess.run(
+            # amidiminder keeps running, so we'll let it timeout but capture output first
+            process = subprocess.Popen(
                 ["amidiminder"],
-                capture_output=True,
-                text=True,
-                timeout=2
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
             )
+            
+            # Wait a bit for output, then kill it
+            import time
+            time.sleep(1.0)  # Give it time to print current state
+            process.terminate()  # Send SIGTERM
+            
+            try:
+                stdout, stderr = process.communicate(timeout=1)
+            except subprocess.TimeoutExpired:
+                process.kill()  # Force kill if terminate didn't work
+                stdout, stderr = process.communicate()
             
             # Parse output for "port added" lines
             # Example: "port added CRAVE:CRAVE MIDI 1 [32:0]"
             devices = set()
             
-            for line in result.stdout.split('\n'):
+            for line in stdout.split('\n'):
                 if 'port added' in line:
                     # Extract device name (before colon)
                     match = re.search(r'port added ([^:]+):', line)
@@ -66,11 +77,10 @@ class MIDIDeviceManager:
             
             return sorted(list(devices))
         
-        except subprocess.TimeoutExpired:
-            print("Warning: amidiminder timeout")
-            return []
         except Exception as e:
             print(f"Error detecting MIDI devices: {e}")
+            import traceback
+            traceback.print_exc()
             return []
     
     def get_device_ports(self, device_name):
@@ -85,16 +95,28 @@ class MIDIDeviceManager:
                   e.g., ["CRAVE MIDI 1", "CRAVE MIDI 2"]
         """
         try:
-            result = subprocess.run(
+            # Run amidiminder
+            process = subprocess.Popen(
                 ["amidiminder"],
-                capture_output=True,
-                text=True,
-                timeout=2
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True
             )
+            
+            # Wait for output, then kill
+            import time
+            time.sleep(1.0)
+            process.terminate()
+            
+            try:
+                stdout, stderr = process.communicate(timeout=1)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                stdout, stderr = process.communicate()
             
             ports = []
             
-            for line in result.stdout.split('\n'):
+            for line in stdout.split('\n'):
                 if f'port added {device_name}:' in line:
                     # Extract port name (between colon and bracket)
                     # Example: "port added CRAVE:CRAVE MIDI 1 [32:0]"
