@@ -159,7 +159,11 @@ class MIDIDeviceManager:
     
     def set_midi_device(self, device_name):
         """
-        Configure amidiminder to route Pure Data MIDI-Out 2 to selected device
+        Configure amidiminder to route Pure Data Port 2 bidirectionally to selected device
+        
+        Creates TWO connections:
+        - Pure Data Midi-Out 2 → Device (send MIDI to synth)
+        - Device → Pure Data Midi-In 2 (receive MIDI from synth)
         
         Args:
             device_name: Name of device to route to (e.g., "CRAVE")
@@ -183,14 +187,19 @@ class MIDIDeviceManager:
             else:
                 lines = []
             
-            # Remove any existing Pure Data Midi-Out 2 rules
+            # Remove any existing Port 2 rules (both IN and OUT)
             new_lines = [line for line in lines 
-                        if 'Pure Data Midi-Out 2' not in line]
+                        if 'Pure Data Midi-Out 2' not in line 
+                        and 'Pure Data Midi-In 2' not in line]
             
-            # Add new rule at the end
-            # Format: Pure Data:Pure Data Midi-Out 2 --> DEVICE:PORT
-            new_rule = f"Pure Data:Pure Data Midi-Out 2 --> {device_name}:{target_port}\n"
-            new_lines.append(new_rule)
+            # Add BIDIRECTIONAL rules for Port 2
+            # OUT: Pure Data → Device
+            out_rule = f"Pure Data:Pure Data Midi-Out 2 --> {device_name}:{target_port}\n"
+            # IN: Device → Pure Data
+            in_rule = f"{device_name}:{target_port} --> Pure Data:Pure Data Midi-In 2\n"
+            
+            new_lines.append(out_rule)
+            new_lines.append(in_rule)
             
             # Write rules file (requires sudo)
             temp_file = "/tmp/amidiminder.rules.tmp"
@@ -222,7 +231,7 @@ class MIDIDeviceManager:
             if restart_result.returncode != 0:
                 return False, f"Failed to restart amidiminder: {restart_result.stderr}"
             
-            print(f"[OK] MIDI device configured: {device_name} -> Pure Data MIDI-Out 2")
+            print(f"[OK] MIDI device configured (bidirectional): {device_name} <-> Pure Data Port 2")
             return True, target_port
         
         except Exception as e:
@@ -232,7 +241,11 @@ class MIDIDeviceManager:
     
     def clear_midi_device(self):
         """
-        Remove MIDI device routing (disconnect Pure Data MIDI-Out 2)
+        Remove MIDI device routing (disconnect Pure Data Port 2 bidirectional)
+        
+        Removes BOTH connections:
+        - Pure Data Midi-Out 2 → Device
+        - Device → Pure Data Midi-In 2
         
         Returns:
             tuple: (success: bool, message: str)
@@ -245,9 +258,10 @@ class MIDIDeviceManager:
             with open(self.rules_file, 'r') as f:
                 lines = f.readlines()
             
-            # Remove Pure Data Midi-Out 2 rules
+            # Remove ALL Port 2 rules (both IN and OUT)
             new_lines = [line for line in lines 
-                        if 'Pure Data Midi-Out 2' not in line]
+                        if 'Pure Data Midi-Out 2' not in line 
+                        and 'Pure Data Midi-In 2' not in line]
             
             # Write rules file
             temp_file = "/tmp/amidiminder.rules.tmp"
